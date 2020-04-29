@@ -1,0 +1,17 @@
+# Ideas:
+# * Timestamps als input (als zufallszahlen oder sind das zweierlei Dinge)
+# * Streamplot?
+# Constanten wie Pi, e, etc. oder auch selbst definierbare
+# das ganze auch als 3d mit (animierten) schnitten durch den cube - aber eher sehr rechenintensiv oder nur den solice rechnen, anstatt den ganzen cube
+# XXX str und repr implementieren und dadirch auch leicht ersichtlich machen, wer mit wem verbunden ist
+# XXX None müssen abgeprüft und weitergereicht werden in jeder klasse
+# eienen normalizer machen, der den punkt transliert, invertiert, rotiert,etc. # das sind eher schon die matrizen sachen. wofür? für die nicht die koordinaten  von -200 - 200 gehen, sondern eher von -1 bis 1
+# widht und height auch als default dinger erzegen und als property verfügbar machen
+# XXX einige black boxen vordefinieren, die sinnvoll erscheinen, anstatt duplikate von funktionen zu machen
+# XXX anstatt für jedes pixel immer alles neu durchzurechnen, vllt. über setter funktionen setzen, der wert welcher conn wurde geändert und nur dann den block neu berechnen, sonst nicht
+
+# XXX Normalisierungen ganz am ende, aber auch zwischendrin. dazu müssen werte gesamt betrachtet werden - wie soll das gehen?
+# XXX werte cappen ; was ist mit None? einen block, der none umwandeln in was anderes, z.b. eine konstante
+# XXX Complex numbers
+# SO bauen, dass enfach dinge direkt im construktur mitgegeben werden können, anstatt sie separat connecten zu müssen
+# einen switcher bauenm der die variablenzuordnung switcht. dies könnte er auch mit mehreren machen und welche das sind, würde man über einen paraeter einspeisen?
