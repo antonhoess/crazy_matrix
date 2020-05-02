@@ -38,8 +38,8 @@ class CrazyMatrix:
             for _y in range(self.__h):
                 x = _x + offset_x
                 y = _y + offset_y
-                # z[_x, _y] = self.__circuit.eval(x, y)
-                z[_x, _y] = self.mandelbrot(x * scale, y * scale)
+                z[_x, _y] = self.__circuit.eval(x, y)
+                #z[_x, _y] = self.mandelbrot(x * scale, y * scale)
             # end for
         # end for
 
