@@ -1,12 +1,12 @@
 from __future__ import annotations
 from typing import Optional
 
-from base.block import Block
+from base.block import BlockFixed
 
 
-class Const(Block):
+class Const(BlockFixed):
     def __init__(self, value: float):
-        Block.__init__(self, 0, 1)
+        BlockFixed.__init__(self, 0, 1)
         self._pin_value[0] = value
     # end def
 
@@ -41,9 +41,9 @@ class ConstUser(Const):
 # end class
 
 
-class Variable(Block):
+class Variable(BlockFixed):
     def __init__(self, value: Optional[float] = None):
-        Block.__init__(self, 1, 1)
+        BlockFixed.__init__(self, 1, 1)
         self._pin_value[0] = value
     # end def
 

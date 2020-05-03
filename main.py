@@ -186,7 +186,7 @@ def main(_argv: List[str]):
         #     return (0, 0, 0)
 
     elif test == 10:
-        points = []
+        points = list()
         points.append(Point(50, 40))
         points.append(Point(-50, -40))
         points.append(Point(150, -75))

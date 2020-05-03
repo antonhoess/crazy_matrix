@@ -1,9 +1,9 @@
-from base.block import Block
+from base.block import BlockFixed
 
 
-class ComplexAdd(Block):
+class ComplexAdd(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 4, 2)
+        BlockFixed.__init__(self, 4, 2)
     # end def
 
     def _calc_values(self):
@@ -16,9 +16,9 @@ class ComplexAdd(Block):
 # end class
 
 
-class ComplexSub(Block):
+class ComplexSub(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 4, 2)
+        BlockFixed.__init__(self, 4, 2)
     # end def
 
     def _calc_values(self):
@@ -31,9 +31,9 @@ class ComplexSub(Block):
 # end class
 
 
-class ComplexMul(Block):
+class ComplexMul(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 4, 2)
+        BlockFixed.__init__(self, 4, 2)
     # end def
 
     def _calc_values(self):
@@ -46,9 +46,9 @@ class ComplexMul(Block):
 # end class
 
 
-class ComplexDiv(Block):
+class ComplexDiv(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 4, 2)
+        BlockFixed.__init__(self, 4, 2)
     # end def
 
     def _calc_values(self):

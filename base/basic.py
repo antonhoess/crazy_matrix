@@ -1,9 +1,9 @@
-from base.block import Block
+from base.block import BlockFixed
 
 
-class Drawer(Block):
+class Drawer(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 1, 0)
+        BlockFixed.__init__(self, 1, 0)
     # end def
 
     def __str__(self):
@@ -15,13 +15,13 @@ class Drawer(Block):
     # end def
 
     def val(self) -> float:
-        return self._conn_in[0].value
+        return self._conn_in[0].value if self._conn_in[0] is not None else None
 # end class
 
 
-class Point(Block):
+class Point(BlockFixed):
     def __init__(self, x: int, y: int):
-        Block.__init__(self, 0, 2)
+        BlockFixed.__init__(self, 0, 2)
         self._pin_value[0] = x
         self._pin_value[1] = y
     # end def

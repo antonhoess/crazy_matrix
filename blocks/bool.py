@@ -1,9 +1,9 @@
-from base.block import Block
+from base.block import BlockFixed
 
 
-class And2(Block):
+class And2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):
@@ -16,9 +16,9 @@ class And2(Block):
 # end class
 
 
-class Or2(Block):
+class Or2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):
@@ -31,9 +31,9 @@ class Or2(Block):
 # end class
 
 
-class Not1(Block):
+class Not1(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 1, 1)
+        BlockFixed.__init__(self, 1, 1)
     # end def
 
     def _calc_values(self):
@@ -46,9 +46,9 @@ class Not1(Block):
 # end class
 
 
-class Gt(Block):
+class Gt(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):
@@ -61,9 +61,9 @@ class Gt(Block):
 # end class
 
 
-class Lt(Block):
+class Lt(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):
@@ -76,9 +76,9 @@ class Lt(Block):
 # end class
 
 
-class Eq2(Block):
+class Eq2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):

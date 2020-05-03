@@ -2,12 +2,12 @@ from __future__ import annotations
 from typing import Optional
 import numpy as np
 
-from base.block import FlexibleBlock, Block
+from base.block import Block, BlockFixed
 
 
-class Add2(Block):
+class Add2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
 
     # end def
 
@@ -17,9 +17,9 @@ class Add2(Block):
 # end class
 
 
-class AddN(FlexibleBlock):
+class AddN(Block):
     def __init__(self):
-        FlexibleBlock.__init__(self, None, 1)
+        Block.__init__(self, None, 1)
     # end def
 
     def _calc_values(self):
@@ -40,9 +40,9 @@ class AddN(FlexibleBlock):
 # end class
 
 
-class Sub2(Block):
+class Sub2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
 
     # end def
 
@@ -52,9 +52,9 @@ class Sub2(Block):
 # end class
 
 
-class Mul2(Block):
+class Mul2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
 
     # end def
 
@@ -64,9 +64,9 @@ class Mul2(Block):
 # end class
 
 
-class Div2(Block):
+class Div2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
 
     # end def
 
@@ -80,9 +80,9 @@ class Div2(Block):
 # end class
 
 
-class Abs(Block):
+class Abs(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 1, 1)
+        BlockFixed.__init__(self, 1, 1)
     # end def
 
     def _calc_values(self):
@@ -91,9 +91,9 @@ class Abs(Block):
 # end class
 
 
-class Minus(Block):
-    def __init__(self, prev_block: Optional[Block] = None):
-        Block.__init__(self, 1, 1)
+class Minus(BlockFixed):
+    def __init__(self, prev_block: Optional[BlockFixed] = None):
+        BlockFixed.__init__(self, 1, 1)
 
         if prev_block is not None:  # Apply this shortcut to other items as well
             self.conn_to_prev_block(prev_block)
@@ -106,9 +106,9 @@ class Minus(Block):
 # end class
 
 
-class Mod(Block):
+class Mod(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):
@@ -117,9 +117,9 @@ class Mod(Block):
 # end class
 
 
-class Square(Block):
-    def __init__(self, prev_block: Optional[Block] = None):
-        Block.__init__(self, 1, 1)
+class Square(BlockFixed):
+    def __init__(self, prev_block: Optional[BlockFixed] = None):
+        BlockFixed.__init__(self, 1, 1)
 
         if prev_block is not None:  # Apply this shortcut to other items as well
             self.conn_to_prev_block(prev_block)
@@ -132,9 +132,9 @@ class Square(Block):
 # end class
 
 
-class Sqrt(Block):
-    def __init__(self, prev_block: Optional[Block] = None):
-        Block.__init__(self, 1, 1)
+class Sqrt(BlockFixed):
+    def __init__(self, prev_block: Optional[BlockFixed] = None):
+        BlockFixed.__init__(self, 1, 1)
 
         if prev_block is not None:  # Apply this shortcut to other items as well
             self.conn_to_prev_block(prev_block)
@@ -151,9 +151,9 @@ class Sqrt(Block):
 # end class
 
 
-class Min2(Block):
+class Min2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):
@@ -162,9 +162,9 @@ class Min2(Block):
 # end class
 
 
-class Max2(Block):
+class Max2(BlockFixed):
     def __init__(self):
-        Block.__init__(self, 2, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):
@@ -173,9 +173,9 @@ class Max2(Block):
 # end class
 
 
-class Sin(Block):
+class Sin(BlockFixed):
     def __init__(self, deg: bool = True):
-        Block.__init__(self, 1, 1)
+        BlockFixed.__init__(self, 1, 1)
         self.__deg = deg
     # end def
 
@@ -190,9 +190,9 @@ class Sin(Block):
 # end class
 
 
-class Cos(Block):
+class Cos(BlockFixed):
     def __init__(self, deg: bool = True):
-        Block.__init__(self, 1, 1)
+        BlockFixed.__init__(self, 1, 1)
         self.__deg = deg
     # end def
 
