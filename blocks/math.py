@@ -5,18 +5,6 @@ import numpy as np
 from base.block import Block, BlockFixed
 
 
-class Add2(BlockFixed):
-    def __init__(self):
-        BlockFixed.__init__(self, 2, 1)
-
-    # end def
-
-    def _calc_values(self):
-        self._pin_value[0] = self._conn_in[0].value + self._conn_in[1].value
-    # end def
-# end class
-
-
 class AddN(Block):
     def __init__(self):
         Block.__init__(self, None, 1)
@@ -52,14 +40,25 @@ class Sub2(BlockFixed):
 # end class
 
 
-class Mul2(BlockFixed):
+class MulN(Block):
     def __init__(self):
-        BlockFixed.__init__(self, 2, 1)
-
+        Block.__init__(self, None, 1)
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = self._conn_in[0].value * self._conn_in[1].value
+        prod = 1.
+        value_calculated = False
+
+        for conn_in in self._conn_in:
+            if conn_in.value is None:
+                self._pin_value[0] = None
+                return
+            # end if
+            prod *= conn_in.value
+            value_calculated = True
+        # end for
+
+        self._pin_value[0] = prod if value_calculated else None
     # end def
 # end class
 
@@ -151,24 +150,61 @@ class Sqrt(BlockFixed):
 # end class
 
 
-class Min2(BlockFixed):
+class MinN(Block):
     def __init__(self):
-        BlockFixed.__init__(self, 2, 1)
+        Block.__init__(self, None, 1)
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = min(self._conn_in[0].value, self._conn_in[1].value)
+        value = None
+        value_calculated = False
+
+        for conn_in in self._conn_in:
+            if conn_in.value is None:
+                self._pin_value[0] = None
+                return
+            # end if
+
+            if not value_calculated:
+                value = conn_in.value
+            else:
+                value = min(value, conn_in.value)
+            # end if
+
+            value_calculated = True
+        # end for
+
+        self._pin_value[0] = value if value_calculated else None
     # end def
 # end class
 
 
-class Max2(BlockFixed):
+class MaxN(Block):
     def __init__(self):
-        BlockFixed.__init__(self, 2, 1)
+        Block.__init__(self, None, 1)
+
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = max(self._conn_in[0].value, self._conn_in[1].value)
+        value = None
+        value_calculated = False
+
+        for conn_in in self._conn_in:
+            if conn_in.value is None:
+                self._pin_value[0] = None
+                return
+            # end if
+
+            if not value_calculated:
+                value = conn_in.value
+            else:
+                value = max(value, conn_in.value)
+            # end if
+
+            value_calculated = True
+        # end for
+
+        self._pin_value[0] = value if value_calculated else None
     # end def
 # end class
 
@@ -203,5 +239,22 @@ class Cos(BlockFixed):
             factor = np.pi / 180.
 
         self._pin_value[0] = np.cos(self._conn_in[0].value * factor)
+    # end def
+# end class
+
+
+class Tan(BlockFixed):
+    def __init__(self, deg: bool = True):
+        BlockFixed.__init__(self, 1, 1)
+        self.__deg = deg
+    # end def
+
+    def _calc_values(self):
+        factor = 1.
+
+        if self.__deg:
+            factor = np.pi / 180.
+
+        self._pin_value[0] = np.tan(self._conn_in[0].value * factor)
     # end def
 # end class

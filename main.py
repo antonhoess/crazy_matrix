@@ -1,30 +1,10 @@
-from __future__ import annotations
-from typing import List
 import sys
 
-
-from base.basic import Circuit, Point
-from base.black_box import BlackBox
+from base.basic import Point
+from base.black_box import BlackBox, RepeatBox
 from blocks.bool import *
-from blocks.const_var import *
-from blocks.math import *
-from blocks.complex import *
 from crazy_matrix import CrazyMatrix
-
-
-# XXX wo anders einordnen
-#
-# class Discr(Block):
-#     def __init__(self):
-#         Block.__init__(self, 1, 1)
-#     # end def
-#
-#     def _calc_values(self):
-#         self._pin_value[0] = np.abs(self._conn_in[0].value)
-#     # end def
-# # end class
-# XXX einen discretizer kann man auch als block bauen.
-# eiglt. alles so umbauen, dass alle pixel als matrix auf einmal ausgewrtet werden, dann kann ich auch funktionen machen, die wissen müssen,w as min und max werte aller pixel (bzw. deren an diesem punkt berechneten werte) sind
+from templates.circuit import *
 
 
 def main(_argv: List[str]):
@@ -33,7 +13,7 @@ def main(_argv: List[str]):
     p = c.point
     d = c.drawer
 
-    test = 12
+    test = 17
 
     if test == 0:
         pi = ConstUser(4.27)
@@ -154,9 +134,7 @@ def main(_argv: List[str]):
     elif test == 9:
         repeat = ConstUser(5)
 
-        # Geht Rekursion überhaupt, wenn ich von Hinten nach vorne traversiere? -> Müsste es nicht anders herum sein?
-
-        #### Fibonacci (evtl. auch mit float anstatt int?) ist das das gleiche, nur skaliert?
+        # XXX Fibonacci (evtl. auch mit float anstatt int?) ist das das gleiche, nur skaliert?
         # SUM
         var1 = Variable(0)
         var2 = Variable(1)
@@ -310,12 +288,125 @@ def main(_argv: List[str]):
         bb.conn_to_prev_block(lt_y, 0, 3)
 
         d.conn_to_prev_block(bb)
+
+    elif test == 13:
+        sxn = SquareXn(None, name="10 squared 4 times")
+        #sxn.conn_to_prev_block(Const(7), 0, 0)
+        sxn.conn_to_prev_block(p, 0, 0)
+        sxn.conn_to_prev_block(Const(10), 0, 1)
+
+        d.conn_to_prev_block(sxn)
+
+    elif test == 14:
+        sq = Square()
+
+        rb = RepeatBox(1, "SquareTimesN")
+
+        rb.assign_conn_in(sq, 0, 0)
+        rb.assign_pin_value(sq, 0, 0)
+
+        rb.conn_to_prev_block(Const(10), 0, 0)
+        rb.conn_to_prev_block(Const(2), 0, 1)  # no. rep.
+
+        d.conn_to_prev_block(rb)
+
+    elif test == 15:
+        rot4 = Rot1_4()
+
+        rb = RepeatBox(4, "Rot")
+
+        rb.assign_conn_in(rot4, 0, 0)
+        rb.assign_conn_in(rot4, 1, 1)
+        rb.assign_conn_in(rot4, 2, 2)
+        rb.assign_conn_in(rot4, 3, 3)
+
+        rb.assign_pin_value(rot4, 0, 0)
+        rb.assign_pin_value(rot4, 1, 1)
+        rb.assign_pin_value(rot4, 2, 2)
+        rb.assign_pin_value(rot4, 3, 3)
+
+        rb.conn_to_prev_block(Const(10), 0, 0)
+        rb.conn_to_prev_block(Const(20), 0, 1)
+        rb.conn_to_prev_block(Const(30), 0, 2)
+        rb.conn_to_prev_block(Const(40), 0, 3)
+        rb.conn_to_prev_block(Const(2), 0, 4)  # no. rep.
+
+        d.conn_to_prev_block(rb, 1, 0)
+
+    elif test == 16:
+        sq1 = Square()
+        sq2 = Square()
+        sq3 = Square()
+
+        rb = RepeatBox(3, "XXX")
+
+        rb.assign_conn_in(sq1, 0, 0)
+        rb.assign_conn_in(sq2, 0, 1)
+        rb.assign_conn_in(sq3, 0, 2)
+
+        rb.assign_pin_value(sq1, 0, 0)
+        rb.assign_pin_value(sq2, 0, 1)
+        rb.assign_pin_value(sq3, 0, 2)
+
+        rb.conn_to_prev_block(Const(1), 0, 0)
+        rb.conn_to_prev_block(Const(2), 0, 1)
+        rb.conn_to_prev_block(Const(3), 0, 2)
+        rb.conn_to_prev_block(Const(3), 0, 3)  # no. rep.
+
+        addn = AddN()
+        addn.add_conn_to_prev_block(xxrb, 0)
+        addn.add_conn_to_prev_block(rb, 1)
+        addn.add_conn_to_prev_block(rb, 2)
+
+        #d.conn_to_prev_block(addn, 0)
+        d.conn_to_prev_block(rb, 2)
+
+    elif test == 17:
+        out_filename = "test01.cmc"  # cmc = crazy matrix circuit
+        idg: IdGenerator = IdGenerator()
+
+        cf: CircuitFactory = CircuitFactory()
+        btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        ctf: ConnTemplateFactory = ConnTemplateFactory()
+
+        fac: BlockTemplate = btf.get_block_template(BlockType.VAL_CONST, .3)
+        cf.add_block(fac)
+
+        mul: BlockTemplate = btf.get_block_template(BlockType.MATH_MUL)
+        cf.add_block(mul)
+
+        add: BlockTemplate = btf.get_block_template(BlockType.MATH_ADD)
+        cf.add_block(add)
+
+        # --
+
+        cf.add_conn(ctf.get_conn_template("0", 0, mul.id, None))
+
+        cf.add_conn(ctf.get_conn_template(fac.id, 0, mul.id, None))
+
+        cf.add_conn(ctf.get_conn_template(mul.id, 0, add.id, None))
+
+        cf.add_conn(ctf.get_conn_template("0", 1, add.id, None))
+
+        cf.add_conn(ctf.get_conn_template(add.id, 0, "1", 0))
+
+        cf.store(out_filename)
+
+        if True:
+            cf: CircuitFactory = CircuitFactory()
+            cf.load(out_filename)
+        # end if
+
+        c = cf.inst()
+
+        cm = CrazyMatrix(c)
+
+        cm.plot()
     # end if
 
     cm = CrazyMatrix(c)
 
     cm.plot()
-    x = 0  # XXX just for setting a breakpoint
 # end def
 
 

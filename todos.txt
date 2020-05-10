@@ -15,3 +15,4 @@
 # XXX Complex numbers
 # SO bauen, dass enfach dinge direkt im construktur mitgegeben werden können, anstatt sie separat connecten zu müssen
 # einen switcher bauenm der die variablenzuordnung switcht. dies könnte er auch mit mehreren machen und welche das sind, würde man über einen paraeter einspeisen?
+# XXX Eine Synchronisations-Barriere bauen? -> Evtl. notwendig für den RepeatBlock, damit erst alle Operationen bos zur Barriere (welche direkt am Input- bzw. Output-Layer sitzt, ausgeführt werden, ehe die Rekursion ausgeführt wird - sonst dürfte es ein undefiniertes Verhalten geben.
