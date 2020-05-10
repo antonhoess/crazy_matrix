@@ -5,6 +5,8 @@ from base.black_box import BlackBox, RepeatBox
 from blocks.bool import *
 from crazy_matrix import CrazyMatrix
 from templates.circuit import *
+from templates.box import *
+from templates.bond import *
 
 
 def main(_argv: List[str]):
@@ -13,7 +15,7 @@ def main(_argv: List[str]):
     p = c.point
     d = c.drawer
 
-    test = 17
+    test = 19
 
     if test == 0:
         pi = ConstUser(4.27)
@@ -354,7 +356,7 @@ def main(_argv: List[str]):
         rb.conn_to_prev_block(Const(3), 0, 3)  # no. rep.
 
         addn = AddN()
-        addn.add_conn_to_prev_block(xxrb, 0)
+        #addn.add_conn_to_prev_block(xxrb, 0)
         addn.add_conn_to_prev_block(rb, 1)
         addn.add_conn_to_prev_block(rb, 2)
 
@@ -367,7 +369,6 @@ def main(_argv: List[str]):
 
         cf: CircuitFactory = CircuitFactory()
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-        ctf: ConnTemplateFactory = ConnTemplateFactory()
 
         fac: BlockTemplate = btf.get_block_template(BlockType.VAL_CONST, .3)
         cf.add_block(fac)
@@ -380,15 +381,15 @@ def main(_argv: List[str]):
 
         # --
 
-        cf.add_conn(ctf.get_conn_template("0", 0, mul.id, None))
+        cf.add_conn(ConnTemplate("0", 0, mul.id, None))
 
-        cf.add_conn(ctf.get_conn_template(fac.id, 0, mul.id, None))
+        cf.add_conn(ConnTemplate(fac.id, 0, mul.id, None))
 
-        cf.add_conn(ctf.get_conn_template(mul.id, 0, add.id, None))
+        cf.add_conn(ConnTemplate(mul.id, 0, add.id, None))
 
-        cf.add_conn(ctf.get_conn_template("0", 1, add.id, None))
+        cf.add_conn(ConnTemplate("0", 1, add.id, None))
 
-        cf.add_conn(ctf.get_conn_template(add.id, 0, "1", 0))
+        cf.add_conn(ConnTemplate(add.id, 0, "1", 0))
 
         cf.store(out_filename)
 
@@ -402,6 +403,64 @@ def main(_argv: List[str]):
         cm = CrazyMatrix(c)
 
         cm.plot()
+
+    elif test == 18:
+        idg: IdGenerator = IdGenerator()
+
+        btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        my_add = BoxFactory()
+
+        addn: BlockTemplate = btf.get_block_template(BlockType.MATH_ADD)
+        my_add.add_block(addn)
+
+        my_add.add_bond(BondTemplate(BoxSide.IN, addn.id, None, 0))
+        my_add.add_bond(BondTemplate(BoxSide.IN, addn.id, None, 1))
+        my_add.add_bond(BondTemplate(BoxSide.OUT, addn.id, None, 0))
+
+        bb = my_add.inst(2, 1, "my_add")
+
+        bb.conn_to_prev_block(p, 0, 0)
+        bb.conn_to_prev_block(p, 1, 1)
+        d.conn_to_prev_block(bb, 0, 0)
+
+    elif test == 19:
+        out_filename = "test01.cmb"  # cmb = crazy matrix (black) box
+        idg: IdGenerator = IdGenerator()
+
+        btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        my_func = BoxFactory()
+
+        fac: BlockTemplate = btf.get_block_template(BlockType.VAL_CONST, .3)
+        my_func.add_block(fac)
+
+        muln: BlockTemplate = btf.get_block_template(BlockType.MATH_MUL)
+        my_func.add_block(muln)
+
+        addn: BlockTemplate = btf.get_block_template(BlockType.MATH_ADD)
+        my_func.add_block(addn)
+
+        # Interconnect the blocks of the box
+        my_func.add_conn(ConnTemplate(fac.id, 0, muln.id, None))
+
+        my_func.add_conn(ConnTemplate(muln.id, 0, addn.id, None))
+
+        # Bond the block of the box to the box pins
+        my_func.add_bond(BondTemplate(BoxSide.IN, muln.id, None, 0))
+        my_func.add_bond(BondTemplate(BoxSide.IN, addn.id, None, 1))
+        my_func.add_bond(BondTemplate(BoxSide.OUT, addn.id, 0, 0))
+
+        my_func.store(out_filename)
+
+        if True:
+            my_func: BoxFactory = BoxFactory()
+            my_func.load(out_filename)
+        # end if
+
+        bb = my_func.inst(2, 1, "my_func")  # XXX sollten diese parameter nicht auch mit abgespeichert werden? diese sollte nicht mehr explizit angegeben werden müssen...
+
+        bb.conn_to_prev_block(p, 0, 0)
+        bb.conn_to_prev_block(p, 1, 1)
+        d.conn_to_prev_block(bb, 0, 0)
     # end if
 
     cm = CrazyMatrix(c)

@@ -111,14 +111,18 @@ class BlackBox(IBlock, IBox):
     # end def
 
     def assign_conn_in(self, block: BlockFixed, block_pin: int, in_pin: int) -> bool:
-        return block.conn_to_prev_block(self._input_layer, in_pin, block_pin)
+        if block_pin is not None:
+            return block.conn_to_prev_block(self._input_layer, in_pin, block_pin)
+        else:
+            return block.add_conn_to_prev_block(self._input_layer, in_pin)
+        # end if
     # end def
 
     def assign_pin_value(self, block: BlockFixed, block_pin: int, out_pin: int) -> bool:
         return self._output_layer.conn_to_prev_block(block, block_pin, out_pin)
     # end def
 
-    def add_conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None) -> None:
+    def add_conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None) -> bool:
         return self._input_layer.add_conn_to_prev_block(prev_block, prev_pin)
     # end def
 
@@ -136,52 +140,13 @@ class BlackBox(IBlock, IBox):
 # end class
 
 
-# XX See SquareXn in math.py
-# Dieses ding hier ovn BalackBox ableiten? ist doch alles gleich bis auf __init__(), oder?
-class RepeatBox(IBlock, IBox):
+class RepeatBox(BlackBox):
     def __init__(self, n_in_out: int, name: Optional[str] = None) -> None:
-        self._name = name
-
-        # self._values_calculated = False
-        self._output_layer: _PassThroughFixed = _PassThroughFixed(n_in_out)
+        BlackBox.__init__(self, n_in_out, n_in_out, name)
         self._input_layer: _PassThroughFixedRepeat = _PassThroughFixedRepeat(n_in_out, self._output_layer)
     # end def
 
     def __str__(self) -> str:
         return f"Repeat Box with {self.n_in} inputs and {self.n_out} outputs."
-    # end def
-
-    @property
-    def n_in(self) -> int:
-        return self._input_layer.n_in
-    # end def
-
-    @property
-    def n_out(self) -> int:
-        return self._output_layer.n_out
-    # end def
-
-    def assign_conn_in(self, block: BlockFixed, block_pin: int, in_pin: int) -> bool:
-        return block.conn_to_prev_block(self._input_layer, in_pin, block_pin)
-    # end def
-
-    def assign_pin_value(self, block: BlockFixed, block_pin: int, out_pin: int) -> bool:
-        return self._output_layer.conn_to_prev_block(block, block_pin, out_pin)
-    # end def
-
-    def add_conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None) -> None:
-        return self._input_layer.add_conn_to_prev_block(prev_block, prev_pin)
-    # end def
-
-    def conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None, in_pin: Optional[int] = None) -> bool:
-        return self._input_layer.conn_to_prev_block(prev_block, prev_pin, in_pin)
-    # end def
-
-    def value(self, pin: Optional[int] = None) -> float:
-        return self._output_layer.value(pin)
-    # end def
-
-    def reset_evaluated(self) -> None:
-        self._output_layer.reset_evaluated()
     # end def
 # end class

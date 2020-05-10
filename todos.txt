@@ -6,7 +6,8 @@
 # XXX str und repr implementieren und dadirch auch leicht ersichtlich machen, wer mit wem verbunden ist
 # XXX None müssen abgeprüft und weitergereicht werden in jeder klasse
 # eienen normalizer machen, der den punkt transliert, invertiert, rotiert,etc. # das sind eher schon die matrizen sachen. wofür? für die nicht die koordinaten  von -200 - 200 gehen, sondern eher von -1 bis 1
-# widht und height auch als default dinger erzegen und als property verfügbar machen
+# width und height (oder limits, damit klar ist, wo der urpsrung liegt) auch als default dinger erzeugen und als property verfügbar machen -> blackbox machen, die alles vono -1..1 skaliert in jede dimension
+.. oder eine, die polar koordinaten umwandelt
 # XXX einige black boxen vordefinieren, die sinnvoll erscheinen, anstatt duplikate von funktionen zu machen
 # XXX anstatt für jedes pixel immer alles neu durchzurechnen, vllt. über setter funktionen setzen, der wert welcher conn wurde geändert und nur dann den block neu berechnen, sonst nicht
 
@@ -16,3 +17,4 @@
 # SO bauen, dass enfach dinge direkt im construktur mitgegeben werden können, anstatt sie separat connecten zu müssen
 # einen switcher bauenm der die variablenzuordnung switcht. dies könnte er auch mit mehreren machen und welche das sind, würde man über einen paraeter einspeisen?
 # XXX Eine Synchronisations-Barriere bauen? -> Evtl. notwendig für den RepeatBlock, damit erst alle Operationen bos zur Barriere (welche direkt am Input- bzw. Output-Layer sitzt, ausgeführt werden, ehe die Rekursion ausgeführt wird - sonst dürfte es ein undefiniertes Verhalten geben.
+# Die Begriffe Factory und Template genau betrachten und ggf. vereinheitlichen bzw. korrigieren

@@ -100,10 +100,10 @@ class Block(IBlock):
         return self._n_out
     # end def
 
-    def add_conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None) -> None:
+    def add_conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None) -> bool:
         self._conn_in.append(None)
         self._n_in += 1
-        self.conn_to_prev_block(prev_block, prev_pin, len(self._conn_in) - 1)
+        return self.conn_to_prev_block(prev_block, prev_pin, len(self._conn_in) - 1)
     # end def
 
     def conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None, in_pin: Optional[int] = None) -> bool:
