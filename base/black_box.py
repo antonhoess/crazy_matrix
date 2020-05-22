@@ -126,7 +126,7 @@ class BlackBox(IBlock, IBox):
         return self._input_layer.add_conn_to_prev_block(prev_block, prev_pin)
     # end def
 
-    def conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None, in_pin: Optional[int] = None) -> bool:
+    def conn_to_prev_block(self, prev_block: IBlock, prev_pin: Optional[int] = None, in_pin: Optional[int] = None) -> bool:
         return self._input_layer.conn_to_prev_block(prev_block, prev_pin, in_pin)
     # end def
 

@@ -105,6 +105,21 @@ class Minus(BlockFixed):
 # end class
 
 
+class Inv(BlockFixed):
+    def __init__(self, prev_block: Optional[IBlock] = None):
+        BlockFixed.__init__(self, 1, 1)
+
+        if prev_block is not None:  # Apply this shortcut to other items as well
+            self.conn_to_prev_block(prev_block)
+        # end if
+    # end def
+
+    def _calc_values(self):
+        self._pin_value[0] = 1 / self._conn_in[0].value if self._conn_in[0].value != 0 else None
+    # end def
+# end class
+
+
 class Mod(BlockFixed):
     def __init__(self):
         BlockFixed.__init__(self, 2, 1)
@@ -116,7 +131,55 @@ class Mod(BlockFixed):
 # end class
 
 
-class Square(BlockFixed):
+class Exp(BlockFixed):
+    def __init__(self):
+        BlockFixed.__init__(self, 1, 1)
+    # end def
+
+    def _calc_values(self):
+        self._pin_value[0] = np.exp(self._conn_in[0].value)
+    # end def
+# end class
+
+
+class Log(BlockFixed):
+    def __init__(self):
+        BlockFixed.__init__(self, 1, 1)
+    # end def
+
+    def _calc_values(self):
+        self._pin_value[0] = np.log(self._conn_in[1].value) / np.log(self._conn_in[0].value)
+    # end def
+# end class
+
+
+class Ln(BlockFixed):
+    def __init__(self):
+        BlockFixed.__init__(self, 1, 1)
+    # end def
+
+    def _calc_values(self):
+        self._pin_value[0] = np.ln(self._conn_in[0].value)
+    # end def
+# end class
+
+
+class Pow(BlockFixed):  # XXX noch in boxbuilder und co einbauen
+    def __init__(self, prev_block: Optional[BlockFixed] = None):
+        BlockFixed.__init__(self, 2, 1)
+
+        if prev_block is not None:  # Apply this shortcut to other items as well
+            self.conn_to_prev_block(prev_block)
+        # end if
+    # end def
+
+    def _calc_values(self):
+        self._pin_value[0] = np.power(self._conn_in[0].value, self._conn_in[1].value)
+    # end def
+# end class
+
+
+class Sq(BlockFixed):
     def __init__(self, prev_block: Optional[BlockFixed] = None):
         BlockFixed.__init__(self, 1, 1)
 

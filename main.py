@@ -15,7 +15,7 @@ def main(_argv: List[str]):
     p = c.point
     d = c.drawer
 
-    test = 19
+    test = 22
 
     if test == 0:
         pi = ConstUser(4.27)
@@ -77,7 +77,7 @@ def main(_argv: List[str]):
         mul_ps.conn_to_prev_block(cos)
         mul_ps.conn_to_prev_block(mul_p, 0, 1)
 
-        sq = Square()
+        sq = Sq()
         sq.conn_to_prev_block(mul_ps)
         d.conn_to_prev_block(sq)
 
@@ -110,10 +110,10 @@ def main(_argv: List[str]):
         diff_y.conn_to_prev_block(p, 1, 0)
         diff_y.conn_to_prev_block(point1, 1, 1)
 
-        x_sq = Square()
+        x_sq = Sq()
         x_sq.conn_to_prev_block(diff_x)
 
-        y_sq = Square()
+        y_sq = Sq()
         y_sq.conn_to_prev_block(diff_y)
 
         add_xy_sq = Add2()
@@ -183,8 +183,8 @@ def main(_argv: List[str]):
             diff_y.conn_to_prev_block(point, 1, 1)
 
             add_xy_sq = Add2()
-            add_xy_sq.conn_to_prev_block(Square(diff_x), 0, 0)
-            add_xy_sq.conn_to_prev_block(Square(diff_y), 0, 1)
+            add_xy_sq.conn_to_prev_block(Sq(diff_x), 0, 0)
+            add_xy_sq.conn_to_prev_block(Sq(diff_y), 0, 1)
 
             _dist = Sqrt(add_xy_sq)
 
@@ -300,7 +300,7 @@ def main(_argv: List[str]):
         d.conn_to_prev_block(sxn)
 
     elif test == 14:
-        sq = Square()
+        sq = Sq()
 
         rb = RepeatBox(1, "SquareTimesN")
 
@@ -336,9 +336,9 @@ def main(_argv: List[str]):
         d.conn_to_prev_block(rb, 1, 0)
 
     elif test == 16:
-        sq1 = Square()
-        sq2 = Square()
-        sq3 = Square()
+        sq1 = Sq()
+        sq2 = Sq()
+        sq3 = Sq()
 
         rb = RepeatBox(3, "XXX")
 
@@ -461,6 +461,275 @@ def main(_argv: List[str]):
         bb.conn_to_prev_block(p, 0, 0)
         bb.conn_to_prev_block(p, 1, 1)
         d.conn_to_prev_block(bb, 0, 0)
+
+    elif test == 20:
+        # Distance function as black box
+        out_filename = "dist.cmb"  # cmb = crazy matrix (black) box
+        idg: IdGenerator = IdGenerator()
+
+        btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        dist_func = BoxFactory()
+
+        # --
+
+        diff_x = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
+        diff_y = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
+        diff_x_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQUARE))
+        diff_y_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQUARE))
+        add_xy_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_ADD))
+        dist = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQRT))
+        dist_rescaled = dist_func.add_block(btf.get_block_template(BlockType.MATH_MUL))
+
+        # Interconnect the blocks of the box
+        dist_func.add_conn(ConnTemplate(diff_x.id, 0, diff_x_sq.id, 0))
+        dist_func.add_conn(ConnTemplate(diff_y.id, 0, diff_y_sq.id, 0))
+        dist_func.add_conn(ConnTemplate(diff_x_sq.id, 0, add_xy_sq.id, None))
+        dist_func.add_conn(ConnTemplate(diff_y_sq.id, 0, add_xy_sq.id, None))
+        dist_func.add_conn(ConnTemplate(add_xy_sq.id, 0, dist.id, 0))
+        dist_func.add_conn(ConnTemplate(dist.id, 0, dist_rescaled.id, None))
+
+        # Bond the block of the box to the box pins
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 0, 0))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 0, 1))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 1, 2))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 1, 3))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, dist_rescaled.id, None, 4))
+        dist_func.add_bond(BondTemplate(BoxSide.OUT, dist_rescaled.id, 0, 0))
+
+        dist_func.store(out_filename)
+
+        if True:
+            dist_func: BoxFactory = BoxFactory()
+            dist_func.load(out_filename)
+        # end if
+
+        bb = dist_func.inst(5, 1, "dist_func")
+
+        my_p_x = ConstUser(-130)
+        my_p_y = ConstUser(80)
+        rescale_factor = ConstUser(10.)
+        bb.conn_to_prev_block(p, 0, 0)
+        bb.conn_to_prev_block(p, 1, 1)
+        bb.conn_to_prev_block(my_p_x, 0, 2)
+        bb.conn_to_prev_block(my_p_y, 0, 3)
+        bb.conn_to_prev_block(rescale_factor, 0, 4)
+
+        d.conn_to_prev_block(bb, 0, 0)
+
+    elif test == 21:
+        # Test in multiple instances of a black box
+        out_filename = "dist.cmb"  # cmb = crazy matrix (black) box
+        idg: IdGenerator = IdGenerator()
+
+        btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        dist_func = BoxFactory()
+
+        # --
+
+        diff_x = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
+        diff_y = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
+        diff_x_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
+        diff_y_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
+        add_xy_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_ADD))
+        dist = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQRT))
+        dist_rescaled = dist_func.add_block(btf.get_block_template(BlockType.MATH_MUL))
+
+        # Interconnect the blocks of the box
+        dist_func.add_conn(ConnTemplate(diff_x.id, 0, diff_x_sq.id, 0))
+        dist_func.add_conn(ConnTemplate(diff_y.id, 0, diff_y_sq.id, 0))
+        dist_func.add_conn(ConnTemplate(diff_x_sq.id, 0, add_xy_sq.id, None))
+        dist_func.add_conn(ConnTemplate(diff_y_sq.id, 0, add_xy_sq.id, None))
+        dist_func.add_conn(ConnTemplate(add_xy_sq.id, 0, dist.id, 0))
+        dist_func.add_conn(ConnTemplate(dist.id, 0, dist_rescaled.id, None))
+        #XXX anstatt hier über x.id zu verwenden, kann ich nciht die .id in ConnTemplate direkt aufrufen und es mitr hier immer ersparen?  -> geht vllt. auch nciht, da es ja gespeichert und geladen werden können muss
+
+        # Bond the block of the box to the box pins
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 0, 0))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 0, 1))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 1, 2))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 1, 3))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, dist_rescaled.id, None, 4))
+        dist_func.add_bond(BondTemplate(BoxSide.OUT, dist_rescaled.id, 0, 0))
+
+        dist_func.store(out_filename)
+
+        if True:
+            dist_func: BoxFactory = BoxFactory()
+            dist_func.load(out_filename)
+        # end if
+
+        scale = 0.001
+        dist_total = AddN()
+
+        bb0 = dist_func.inst(5, 1, "dist_func")  # XXX sollten diese parameter nicht auch mit abgespeichert werden? diese sollte nicht mehr explizit angegeben werden müssen...
+
+        p0_x = ConstUser(-130)
+        p0_y = ConstUser(80)
+        p0_scale = ConstUser(scale)
+
+        bb0.conn_to_prev_block(p, 0, 0)
+        bb0.conn_to_prev_block(p, 1, 1)
+        bb0.conn_to_prev_block(p0_x, 0, 2)
+        bb0.conn_to_prev_block(p0_y, 0, 3)
+        bb0.conn_to_prev_block(p0_scale, 0, 4)
+
+        dist_total.conn_to_prev_block(Inv(bb0), 0, None)
+
+        bb1 = dist_func.inst(5, 1, "dist_func")
+
+        p1_x = ConstUser(100)
+        p1_y = ConstUser(70)
+        p1_scale = ConstUser(scale*.5)
+
+        bb1.conn_to_prev_block(p, 0, 0)
+        bb1.conn_to_prev_block(p, 1, 1)
+        bb1.conn_to_prev_block(p1_x, 0, 2)
+        bb1.conn_to_prev_block(p1_y, 0, 3)
+        bb1.conn_to_prev_block(p1_scale, 0, 4)
+
+        dist_total.conn_to_prev_block(Inv(bb1), 0, None)
+
+        bb2 = dist_func.inst(5, 1, "dist_func")
+
+        p2_x = ConstUser(0)
+        p2_y = ConstUser(-90)
+        p2_scale = ConstUser(scale)
+
+        bb2.conn_to_prev_block(p, 0, 0)
+        bb2.conn_to_prev_block(p, 1, 1)
+        bb2.conn_to_prev_block(p2_x, 0, 2)
+        bb2.conn_to_prev_block(p2_y, 0, 3)
+        bb2.conn_to_prev_block(p2_scale, 0, 4)
+
+        dist_total.conn_to_prev_block(Inv(bb2), 0, None)
+
+        d.conn_to_prev_block(dist_total, 0, 0)
+
+    elif test == 22:
+        # > dist
+        # Test in multiple instances of a black box
+        fn_dist = "dist.cmb"  # cmb = crazy matrix (black) box
+        idg: IdGenerator = IdGenerator()
+
+        btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        dist_func = BoxFactory()
+
+        diff_x = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
+        diff_y = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
+        diff_x_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
+        diff_y_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
+        add_xy_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_ADD))
+        dist = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQRT))
+        dist_rescaled = dist_func.add_block(btf.get_block_template(BlockType.MATH_MUL))
+
+        # Interconnect the blocks of the box
+        dist_func.add_conn(ConnTemplate(diff_x.id, 0, diff_x_sq.id, 0))
+        dist_func.add_conn(ConnTemplate(diff_y.id, 0, diff_y_sq.id, 0))
+        dist_func.add_conn(ConnTemplate(diff_x_sq.id, 0, add_xy_sq.id, None))
+        dist_func.add_conn(ConnTemplate(diff_y_sq.id, 0, add_xy_sq.id, None))
+        dist_func.add_conn(ConnTemplate(add_xy_sq.id, 0, dist.id, 0))
+        dist_func.add_conn(ConnTemplate(dist.id, 0, dist_rescaled.id, None))
+
+        # Bond the block of the box to the box pins
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 0, 0))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 0, 1))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 1, 2))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 1, 3))
+        dist_func.add_bond(BondTemplate(BoxSide.IN, dist_rescaled.id, None, 4))
+        dist_func.add_bond(BondTemplate(BoxSide.OUT, dist_rescaled.id, 0, 0))
+
+        dist_func.store(fn_dist)
+
+        # normal distribution
+        # Test in multiple instances of a black box
+        fn_normal = "normal.cmb"  # cmb = crazy matrix (black) box
+        idg: IdGenerator = IdGenerator()
+
+        btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        normal_func = BoxFactory()
+
+        exp_term_fac = normal_func.add_block(btf.get_block_template(BlockType.VAL_CONST, -.5))
+        exp_term_x_sq = normal_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
+        exp_term = normal_func.add_block(btf.get_block_template(BlockType.MATH_MUL))
+        normal = normal_func.add_block(btf.get_block_template(BlockType.MATH_EXP))
+
+        # Interconnect the blocks of the box
+        normal_func.add_conn(ConnTemplate(exp_term_fac.id, 0, exp_term.id, None))
+        normal_func.add_conn(ConnTemplate(exp_term_x_sq.id, 0, exp_term.id, None))
+        normal_func.add_conn(ConnTemplate(exp_term.id, 0, normal.id, 0))
+
+        # Bond the block of the box to the box pins
+        normal_func.add_bond(BondTemplate(BoxSide.IN, exp_term_x_sq.id, 0, 0))
+        normal_func.add_bond(BondTemplate(BoxSide.OUT, normal.id, 0, 0))
+
+        normal_func.store(fn_normal)
+
+        if True:
+            dist_func: BoxFactory = BoxFactory()
+            dist_func.load(fn_dist)
+
+            normal_func: BoxFactory = BoxFactory()
+            normal_func.load(fn_normal)
+        # end if
+
+        scale = .05
+        dist_total = AddN()
+
+        # Point 0
+        bb_dist0 = dist_func.inst(5, 1, "dist_func")
+        bb_normal0 = normal_func.inst(1, 1, "normal_func")
+
+        p0_x = ConstUser(70)
+        p0_y = ConstUser(60)
+        p0_scale = ConstUser(scale)
+
+        bb_dist0.conn_to_prev_block(p, 0, 0)
+        bb_dist0.conn_to_prev_block(p, 1, 1)
+        bb_dist0.conn_to_prev_block(p0_x, 0, 2)
+        bb_dist0.conn_to_prev_block(p0_y, 0, 3)
+        bb_dist0.conn_to_prev_block(p0_scale, 0, 4)
+
+        bb_normal0.conn_to_prev_block(bb_dist0, 0, 0)
+
+        dist_total.conn_to_prev_block(bb_normal0, 0, None)
+
+        # Point 1
+        bb_dist1 = dist_func.inst(5, 1, "dist_func")
+        bb_normal1 = normal_func.inst(1, 1, "normal_func")
+
+        p1_x = ConstUser(-100)
+        p1_y = ConstUser(80)
+        p1_scale = ConstUser(scale*2)
+
+        bb_dist1.conn_to_prev_block(p, 0, 0)
+        bb_dist1.conn_to_prev_block(p, 1, 1)
+        bb_dist1.conn_to_prev_block(p1_x, 0, 2)
+        bb_dist1.conn_to_prev_block(p1_y, 0, 3)
+        bb_dist1.conn_to_prev_block(p1_scale, 0, 4)
+
+        bb_normal1.conn_to_prev_block(bb_dist1, 0, 0)
+
+        dist_total.conn_to_prev_block(bb_normal1, 0, None)
+
+        # Point 2
+        bb_dist2 = dist_func.inst(5, 1, "dist_func")
+        bb_normal2 = normal_func.inst(1, 1, "normal_func")
+
+        p2_x = ConstUser(-80)
+        p2_y = ConstUser(-20)
+        p2_scale = ConstUser(scale/3)
+
+        bb_dist2.conn_to_prev_block(p, 0, 0)
+        bb_dist2.conn_to_prev_block(p, 1, 1)
+        bb_dist2.conn_to_prev_block(p2_x, 0, 2)
+        bb_dist2.conn_to_prev_block(p2_y, 0, 3)
+        bb_dist2.conn_to_prev_block(p2_scale, 0, 4)
+
+        bb_normal2.conn_to_prev_block(bb_dist2, 0, 0)
+
+        dist_total.conn_to_prev_block(bb_normal2, 0, None)
+
+        d.conn_to_prev_block(dist_total, 0, 0)
     # end if
 
     cm = CrazyMatrix(c)

@@ -14,8 +14,10 @@ class CircuitFactory:
         self._conns: List[ConnTemplate] = []
     # end def
 
-    def add_block(self, block: BlockTemplate):
+    def add_block(self, block: BlockTemplate) -> BlockTemplate:
         self._blocks.append(block)
+
+        return block
     # end def
 
     def add_conn(self, conn: ConnTemplate):

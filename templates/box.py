@@ -46,7 +46,7 @@ class BoxFactory(CircuitFactory):
             if conn.out_block_pin is not None:
                 out_block.conn_to_prev_block(in_block, conn.in_block_pin, conn.out_block_pin)
             else:
-                out_block.add_conn_to_prev_block(in_block, conn.in_block_pin)
+                out_block.conn_to_prev_block(in_block, conn.in_block_pin)
             # end if
         # end for
 

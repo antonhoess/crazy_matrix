@@ -35,6 +35,8 @@ class BlockType(Enum):
     SYS_IN_POS = "pos"
     SYS_OUT_DRAWER = "drawer"
     VAL_CONST = "const"
+    VAL_CONST_E = "const_e"
+    VAL_CONST_PI = "const_pi"
     MATH_ADD = "add"
     MATH_SUB = "sub"
     MATH_MUL = "mul"
@@ -42,7 +44,11 @@ class BlockType(Enum):
     MATH_ABS = "abs"
     MATH_MINUS = "minus"
     MATH_MOD = "mod"
-    MATH_SQUARE = "square"
+    MATH_EXP = "exp"
+    MATH_LOG = "log"
+    MATH_LN = "ln"
+    MATH_POW = "pow"
+    MATH_SQ = "sq"
     MATH_SQRT = "sqrt"
     MATH_MIN = "min"
     MATH_MAX = "max"
@@ -129,6 +135,12 @@ class BlockTemplateFactory:
             elif t is BlockType.VAL_CONST:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(0, 1))
 
+            elif t is BlockType.VAL_CONST_E:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(0, 1))
+
+            elif t is BlockType.VAL_CONST_PI:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(0, 1))
+
             elif t is BlockType.MATH_ADD:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(None, 1))
 
@@ -150,7 +162,19 @@ class BlockTemplateFactory:
             elif t is BlockType.MATH_MOD:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(2, 1))
 
-            elif t is BlockType.MATH_SQUARE:
+            elif t is BlockType.MATH_EXP:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
+
+            elif t is BlockType.MATH_LOG:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(2, 1))
+
+            elif t is BlockType.MATH_LN:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
+
+            elif t is BlockType.MATH_POW:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(2, 1))
+
+            elif t is BlockType.MATH_SQ:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
 
             elif t is BlockType.MATH_SQRT:
@@ -199,9 +223,14 @@ class BlockFactory:
 
         elif block_template.type is BlockType.SYS_OUT_DRAWER:
             return None
-
         elif block_template.type is BlockType.VAL_CONST:
             return Const(value)
+
+        elif block_template.type is BlockType.VAL_CONST_E:
+            return ConstE()
+
+        elif block_template.type is BlockType.VAL_CONST_PI:
+            return ConstPi()
 
         elif block_template.type is BlockType.MATH_ADD:
             return AddN()
@@ -224,8 +253,20 @@ class BlockFactory:
         elif block_template.type is BlockType.MATH_MOD:
             return Mod()
 
-        elif block_template.type is BlockType.MATH_SQUARE:
-            return Square()
+        elif block_template.type is BlockType.MATH_EXP:
+            return Exp()
+
+        elif block_template.type is BlockType.MATH_LOG:
+            return Log()
+
+        elif block_template.type is BlockType.MATH_LN:
+            return Ln()
+
+        elif block_template.type is BlockType.MATH_POW:
+            return Pow()
+
+        elif block_template.type is BlockType.MATH_SQ:
+            return Sq()
 
         elif block_template.type is BlockType.MATH_SQRT:
             return Sqrt()

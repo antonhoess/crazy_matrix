@@ -58,14 +58,14 @@ class Block(IBlock):
 
         # Connection from previous block into this one
         if n_in is not None:
-            self.__n_in_fixed = True
+            self._n_in_fixed = True
             self._n_in = n_in
 
             for i in range(self._n_in):
                 self._conn_in.append(None)
             # end for
         else:
-            self.__n_in_fixed = False
+            self._n_in_fixed = False
             self._n_in = 0
         # end if
 
@@ -100,18 +100,25 @@ class Block(IBlock):
         return self._n_out
     # end def
 
-    def add_conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None) -> bool:
+    def add_conn_to_prev_block(self, prev_block: IBlock, prev_pin: Optional[int] = None) -> bool:
         self._conn_in.append(None)
         self._n_in += 1
         return self.conn_to_prev_block(prev_block, prev_pin, len(self._conn_in) - 1)
     # end def
 
-    def conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None, in_pin: Optional[int] = None) -> bool:
+    def conn_to_prev_block(self, prev_block: IBlock, prev_pin: Optional[int] = None, in_pin: Optional[int] = None) -> bool:
         if prev_pin is None:
             prev_pin = 0
 
         if in_pin is None:
-            in_pin = 0
+            if self._n_in_fixed:
+                in_pin = 0
+            else:
+                in_pin = self.n_in
+                self._conn_in.append(None)
+                self._n_in += 1
+            # end if
+        # end if
 
         if 0 <= prev_pin < prev_block.n_out and 0 <= in_pin < self.n_in:
             conn: Conn = Conn(prev_block, prev_pin)
@@ -178,13 +185,13 @@ class BlockFixed(Block):
 
 
 class Conn:
-    def __init__(self, in_block: Block, in_pin: int):
-        self.__in_block: Block = in_block
+    def __init__(self, in_block: IBlock, in_pin: int):
+        self.__in_block: IBlock = in_block
         self.__in_pin: int = in_pin
     # end def
 
     @property
-    def in_block(self) -> Block:
+    def in_block(self) -> IBlock:
         return self.__in_block
     # end def
 
