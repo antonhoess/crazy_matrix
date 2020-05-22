@@ -42,11 +42,16 @@ class ComplexSub(BlockFixed):
     # end def
 
     def _calc_values(self):
-        z1 = complex(self._conn_in[0].value, self._conn_in[1].value)
-        z2 = complex(self._conn_in[2].value, self._conn_in[3].value)
-        z_res = z1 - z2
-        self._pin_value[0] = z_res.real
-        self._pin_value[1] = z_res.imag
+        if self._conn_in[0].value is not None and self._conn_in[1].value is not None and self._conn_in[2].value is not None and self._conn_in[3].value is not None:
+            z1 = complex(self._conn_in[0].value, self._conn_in[1].value)
+            z2 = complex(self._conn_in[2].value, self._conn_in[3].value)
+            z_res = z1 - z2
+            self._pin_value[0] = z_res.real
+            self._pin_value[1] = z_res.imag
+        else:
+            self._pin_value[0] = None
+            self._pin_value[1] = None
+        # end if
     # end def
 # end class
 
@@ -92,10 +97,16 @@ class ComplexDiv(BlockFixed):
     # end def
 
     def _calc_values(self):
-        z1 = complex(self._conn_in[0].value, self._conn_in[1].value)
-        z2 = complex(self._conn_in[2].value, self._conn_in[3].value)
-        z_res = z1 / z2  # XXX abprüfung rein? wie schaut diese aus? wie verhält sich die complex class in diesem falle? in literatur schauen, wann div0 bei komplexen Zahlen auftritt
-        self._pin_value[0] = z_res.real
-        self._pin_value[1] = z_res.imag
+        if self._conn_in[0].value is not None and self._conn_in[1].value is not None and self._conn_in[2].value is not None and self._conn_in[3].value is not None \
+                and self._conn_in[2].value != 0 and self._conn_in[3].value != 0:
+            z1 = complex(self._conn_in[0].value, self._conn_in[1].value)
+            z2 = complex(self._conn_in[2].value, self._conn_in[3].value)
+            z_res = z1 / z2
+            self._pin_value[0] = z_res.real
+            self._pin_value[1] = z_res.imag
+        else:
+            self._pin_value[0] = None
+            self._pin_value[1] = None
+        # end if
     # end def
 # end class

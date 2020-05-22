@@ -36,6 +36,5 @@ class ConnTemplate:
     @property
     def out_block_pin(self) -> int:
         return self.__out_block_pin
-    # end def self.__id
     # end def
 # end class

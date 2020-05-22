@@ -17,12 +17,7 @@ class IBlock(ABC):
     # end def
 
     @abstractmethod
-    def add_conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None) -> None:
-        raise NotImplementedError
-    # end def
-
-    @abstractmethod
-    def conn_to_prev_block(self, prev_block: BlockFixed, prev_pin: Optional[int] = None, in_pin: Optional[int] = None) -> bool:
+    def conn_to_prev_block(self, prev_block: IBlock, prev_pin: Optional[int] = None, in_pin: Optional[int] = None):
         raise NotImplementedError
     # end def
 
@@ -100,13 +95,7 @@ class Block(IBlock):
         return self._n_out
     # end def
 
-    def add_conn_to_prev_block(self, prev_block: IBlock, prev_pin: Optional[int] = None) -> bool:
-        self._conn_in.append(None)
-        self._n_in += 1
-        return self.conn_to_prev_block(prev_block, prev_pin, len(self._conn_in) - 1)
-    # end def
-
-    def conn_to_prev_block(self, prev_block: IBlock, prev_pin: Optional[int] = None, in_pin: Optional[int] = None) -> bool:
+    def conn_to_prev_block(self, prev_block: IBlock, prev_pin: Optional[int] = None, in_pin: Optional[int] = None):
         if prev_pin is None:
             prev_pin = 0
 
@@ -125,9 +114,8 @@ class Block(IBlock):
             if self._conn_in[in_pin]:
                 print(f"Overwriting in pin {in_pin}")
             self._conn_in[in_pin] = conn
-            return True
         else:
-            return False
+            raise ValueError(f"Pin of previous block {prev_pin} not in range 0..{prev_block.n_out}.")
         # end if
     # end def
 
@@ -135,15 +123,15 @@ class Block(IBlock):
         if pin is None:
             pin = 0
 
-        value = None  # stattdessen besser eine exception machen?`Und/oder einen checker, der prüft, ob alle connections gesetzt sind, so dass keine fehler passieren können? Was ist mit div0 und anderen Fehlern?
-
         if 0 <= pin < self._n_out:
             if not self._values_calculated:
                 self._calc_values()
-                self._values_calculated = True  # Das klappt nicht mehr so einfach bei einer BlackBox
+                self._values_calculated = True
             # end if
 
             value = self._pin_value[pin]
+        else:
+            raise ValueError(f"Pin {pin} not in range 0..{self._n_out}.")
         # end if
 
         return value

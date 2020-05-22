@@ -18,9 +18,10 @@ class AddN(Block):
             if conn_in.value is None:
                 self._pin_value[0] = None
                 return
+            else:
+                accum += conn_in.value
+                value_calculated = True
             # end if
-            accum += conn_in.value
-            value_calculated = True
         # end for
 
         self._pin_value[0] = accum if value_calculated else None
@@ -35,10 +36,10 @@ class Sub2(BlockFixed):
     # end def
 
     def _calc_values(self):
-        if self._conn_in[0].value is None or self._conn_in[1].value is None:
-            return None
-        else:
+        if self._conn_in[0].value is not None and self._conn_in[1].value is not None:
             self._pin_value[0] = self._conn_in[0].value - self._conn_in[1].value
+        else:
+            self._pin_value[0] = None
         # end if
     # end def
 # end class
@@ -57,9 +58,10 @@ class MulN(Block):
             if conn_in.value is None:
                 self._pin_value[0] = None
                 return
+            else:
+                prod *= conn_in.value
+                value_calculated = True
             # end if
-            prod *= conn_in.value
-            value_calculated = True
         # end for
 
         self._pin_value[0] = prod if value_calculated else None
@@ -70,11 +72,10 @@ class MulN(Block):
 class Div2(BlockFixed):
     def __init__(self):
         BlockFixed.__init__(self, 2, 1)
-
     # end def
 
     def _calc_values(self):
-        if self._conn_in[1].value != 0.:
+        if self._conn_in[0].value is not None and self._conn_in[1].value is not None and self._conn_in[1].value != 0.:
             self._pin_value[0] = self._conn_in[0].value / self._conn_in[1].value
         else:
             self._pin_value[0] = None
@@ -89,7 +90,11 @@ class Abs(BlockFixed):
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = np.abs(self._conn_in[0].value)
+        if self._conn_in[0].value is not None:
+            self._pin_value[0] = np.abs(self._conn_in[0].value)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
@@ -98,19 +103,23 @@ class Minus(BlockFixed):
     def __init__(self, prev_block: Optional[BlockFixed] = None):
         BlockFixed.__init__(self, 1, 1)
 
-        if prev_block is not None:  # Apply this shortcut to other items as well
+        if prev_block is not None:  # XXX Apply this shortcut to other items as well
             self.conn_to_prev_block(prev_block)
         # end if
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = -self._conn_in[0].value
+        if self._conn_in[0].value is not None:
+            self._pin_value[0] = -self._conn_in[0].value
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
 
 class Inv(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
+    def __init__(self, prev_block: Optional[IBlock] = None):  # XXX IBlock überall durchziehen? an funktionen testen, die ich aktuell in Verwendung habe
         BlockFixed.__init__(self, 1, 1)
 
         if prev_block is not None:  # Apply this shortcut to other items as well
@@ -119,7 +128,11 @@ class Inv(BlockFixed):
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = 1 / self._conn_in[0].value if self._conn_in[0].value != 0 else None
+        if self._conn_in[0].value is not None and self._conn_in[0].value != 0:
+            self._pin_value[0] = 1 / self._conn_in[0].value
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
@@ -130,7 +143,11 @@ class Mod(BlockFixed):
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = self._conn_in[0].value % self._conn_in[1].value
+        if self._conn_in[0].value is not None and self._conn_in[1].value is not None and self._conn_in[1].value != 0:
+            self._pin_value[0] = self._conn_in[0].value % self._conn_in[1].value
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
@@ -141,18 +158,26 @@ class Exp(BlockFixed):
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = np.exp(self._conn_in[0].value)
+        if self._conn_in[0].value is not None:
+            self._pin_value[0] = np.exp(self._conn_in[0].value)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
 
 class Log(BlockFixed):
     def __init__(self):
-        BlockFixed.__init__(self, 1, 1)
+        BlockFixed.__init__(self, 2, 1)
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = np.log(self._conn_in[1].value) / np.log(self._conn_in[0].value)
+        if self._conn_in[0].value is not None and self._conn_in[1].value is not None and self._conn_in[0].value >= 0 and self._conn_in[0].value != 1 and self._conn_in[1].value > 0:
+            self._pin_value[0] = np.log(self._conn_in[1].value) / np.log(self._conn_in[0].value)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
@@ -163,12 +188,16 @@ class Ln(BlockFixed):
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = np.ln(self._conn_in[0].value)
+        if self._conn_in[0].value is not None:
+            self._pin_value[0] = np.ln(self._conn_in[0].value)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
 
-class Pow(BlockFixed):  # XXX noch in boxbuilder und co einbauen
+class Pow(BlockFixed):
     def __init__(self, prev_block: Optional[BlockFixed] = None):
         BlockFixed.__init__(self, 2, 1)
 
@@ -178,7 +207,11 @@ class Pow(BlockFixed):  # XXX noch in boxbuilder und co einbauen
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = np.power(self._conn_in[0].value, self._conn_in[1].value)
+        if self._conn_in[0].value is not None and self._conn_in[1].value is not None and self._conn_in[0].value >= 0:
+            self._pin_value[0] = np.power(self._conn_in[0].value, self._conn_in[1].value)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
@@ -193,7 +226,11 @@ class Sq(BlockFixed):
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = np.square(self._conn_in[0].value)
+        if self._conn_in[0].value is not None:
+            self._pin_value[0] = np.square(self._conn_in[0].value)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
@@ -208,7 +245,7 @@ class Sqrt(BlockFixed):
     # end def
 
     def _calc_values(self):
-        if self._conn_in[0].value >= 0:
+        if self._conn_in[0].value is not None and self._conn_in[0].value >= 0:
             self._pin_value[0] = np.sqrt(self._conn_in[0].value)
         else:
             self._pin_value[0] = None
@@ -283,12 +320,16 @@ class Sin(BlockFixed):
     # end def
 
     def _calc_values(self):
-        factor = 1.
+        if self._conn_in[0].value is not None:
+            factor = 1.
 
-        if self.__deg:
-            factor = np.pi / 180.
+            if self.__deg:
+                factor = np.pi / 180.
 
-        self._pin_value[0] = np.sin(self._conn_in[0].value * factor)
+            self._pin_value[0] = np.sin(self._conn_in[0].value * factor)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
@@ -300,12 +341,16 @@ class Cos(BlockFixed):
     # end def
 
     def _calc_values(self):
-        factor = 1.
+        if self._conn_in[0].value is not None:
+            factor = 1.
 
-        if self.__deg:
-            factor = np.pi / 180.
+            if self.__deg:
+                factor = np.pi / 180.
 
-        self._pin_value[0] = np.cos(self._conn_in[0].value * factor)
+            self._pin_value[0] = np.cos(self._conn_in[0].value * factor)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class
 
@@ -317,11 +362,15 @@ class Tan(BlockFixed):
     # end def
 
     def _calc_values(self):
-        factor = 1.
+        if self._conn_in[0].value is not None:
+            factor = 1.
 
-        if self.__deg:
-            factor = np.pi / 180.
+            if self.__deg:
+                factor = np.pi / 180.
 
-        self._pin_value[0] = np.tan(self._conn_in[0].value * factor)
+            self._pin_value[0] = np.tan(self._conn_in[0].value * factor)
+        else:
+            self._pin_value[0] = None
+        # end if
     # end def
 # end class

@@ -1,18 +1,17 @@
-from templates.circuit import *
-from templates.bond import *
-from base.block import *
-from base.black_box import *
+from __future__ import annotations
+from typing import Dict, List, Optional
+
+from templates.bond import BondTemplate, BoxSide
+from base.black_box import BlackBox, IBlock
+from templates.block import BlockFactory
+from templates.circuit import CircuitFactory
 
 
-# XXX was ist mit repeatbox
 class BoxFactory(CircuitFactory):
-    def __init__(self):#, n_in: int, n_out: int):
-        CircuitFactory.__init__(self)  # , n_in, n_out, name)
-        #self.__n_in = n_in  # XXX diese klasse evtl. komplett neu implementieren oder die parameter in den konstrultor nehmen anstatt bei inst() zu übergeben, da dort die signatur nicht zusammenpasst - oder noch ganzt andere lösung?
-        #self.__n_out = n_out
+    def __init__(self):
+        CircuitFactory.__init__(self)
         self._n_in = 0
         self._n_out = 0
-        # self.__name = name
         self._bonds: List[BondTemplate] = []
     # end def
 
@@ -30,21 +29,22 @@ class BoxFactory(CircuitFactory):
         self._bonds.append(bond)
 
         if bond.side is BoxSide.IN:
-            self._n_in += 1
-        else:  # bond.side is BoxSide.OUT:
+            if len([b for b in self._bonds if b.side is BoxSide.IN and b.box_pin == bond.box_pin]) == 1:  # Prevent from counting in-pins with multiple connections more than once.
+                self._n_in += 1
+        else:
             self._n_out += 1
         # end if
     # end def
 
     def inst(self, name: Optional[str] = None) -> BlackBox:
-        blocks: List[Dict[str, Block]] = []
-        #box: IBox = IBox()
+        blocks: List[Dict[str, IBlock]] = list()
+        # XXX box: IBox = IBox()
         box: BlackBox = BlackBox(self._n_in, self._n_out, name)
 
-        def get_block_by_id(block_id: str):
-            for block in blocks:
-                if block["id"] == block_id:
-                    return block["block"]
+        def get_block_by_id(block_id: str) -> Optional[IBlock]:
+            for b in blocks:
+                if b["id"] == block_id:
+                    return b["block"]
                 # end if
             # end for
 
@@ -61,11 +61,7 @@ class BoxFactory(CircuitFactory):
             in_block = get_block_by_id(conn.in_block_id)
             out_block = get_block_by_id(conn.out_block_id)
 
-            if conn.out_block_pin is not None:
-                out_block.conn_to_prev_block(in_block, conn.in_block_pin, conn.out_block_pin)
-            else:
-                out_block.conn_to_prev_block(in_block, conn.in_block_pin)
-            # end if
+            out_block.conn_to_prev_block(in_block, conn.in_block_pin, conn.out_block_pin)
         # end for
 
         for bond in self._bonds:
@@ -122,7 +118,7 @@ class BoxFactory(CircuitFactory):
         # end if
     # end def
 
-    def load(self, filename: str):
+    def load(self, filename: str) -> BoxFactory:
         with open(filename, 'r') as f:
             for line in f:
                 line = line.rstrip()
@@ -143,5 +139,8 @@ class BoxFactory(CircuitFactory):
                     continue
                 # end if
             # end for
+        # end with
+
+        return self
     # end def
 # end class

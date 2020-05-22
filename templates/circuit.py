@@ -1,13 +1,12 @@
 from __future__ import annotations
-from typing import Dict
-import io
+from typing import Dict, List, Optional, Union
 
 from base.basic import Circuit
-from templates.block import *
-from templates.conn import *
+from base.block import IBlock
+from templates.block import BlockType, BlockTemplate, BlockFactory
+from templates.conn import ConnTemplate
 
 
-# XXX Auch eine Funktion machen zum prüfen, ob alle pins belegt sind, auch ovm drawer, damit sichergestellt ist, dass er überhaupt funktionieren kann
 class CircuitFactory:
     def __init__(self):
         self._blocks: List[BlockTemplate] = []
@@ -27,7 +26,7 @@ class CircuitFactory:
     # end def
 
     def inst(self) -> Circuit:
-        blocks: List[Dict[str, Block]] = []
+        blocks: List[Dict[str, Optional[IBlock]]] = list()
         circuit: Circuit = Circuit()
 
         def get_block_by_id(block_id: str):
@@ -38,9 +37,9 @@ class CircuitFactory:
                 return circuit.drawer
 
             else:
-                for block in blocks:
-                    if block["id"] == block_id:
-                        return block["block"]
+                for b in blocks:
+                    if b["id"] == block_id:
+                        return b["block"]
                     # end if
                 # end for
             # end if
@@ -125,9 +124,6 @@ class CircuitFactory:
                 line = line.rstrip()
                 fields = line.split(";")
                 if len(fields) < 1:
-                    continue
-
-                if self._handle_line_check_for_meta_information(fields):
                     continue
 
                 if self._handle_line_check_for_block(fields):

@@ -1,23 +1,57 @@
 # Ideas:
 # * Timestamps als input (als zufallszahlen oder sind das zweierlei Dinge)
 # * Streamplot?
-# Constanten wie Pi, e, etc. oder auch selbst definierbare
 # das ganze auch als 3d mit (animierten) schnitten durch den cube - aber eher sehr rechenintensiv oder nur den solice rechnen, anstatt den ganzen cube
-# XXX str und repr implementieren und dadirch auch leicht ersichtlich machen, wer mit wem verbunden ist
-# XXX None müssen abgeprüft und weitergereicht werden in jeder klasse
+# XXX str und repr implementieren und dadurch auch leicht ersichtlich machen, wer mit wem verbunden ist
 # eienen normalizer machen, der den punkt transliert, invertiert, rotiert,etc. # das sind eher schon die matrizen sachen. wofür? für die nicht die koordinaten  von -200 - 200 gehen, sondern eher von -1 bis 1
+
+black boxen:
 # width und height (oder limits, damit klar ist, wo der urpsrung liegt) auch als default dinger erzeugen und als property verfügbar machen -> blackbox machen, die alles vono -1..1 skaliert in jede dimension
 .. oder eine, die polar koordinaten umwandelt
 # XXX einige black boxen vordefinieren, die sinnvoll erscheinen, anstatt duplikate von funktionen zu machen
+
 # XXX anstatt für jedes pixel immer alles neu durchzurechnen, vllt. über setter funktionen setzen, der wert welcher conn wurde geändert und nur dann den block neu berechnen, sonst nicht
 
 # XXX Normalisierungen ganz am ende, aber auch zwischendrin. dazu müssen werte gesamt betrachtet werden - wie soll das gehen?
-# XXX werte cappen ; was ist mit None? einen block, der none umwandeln in was anderes, z.b. eine konstante
-# XXX Complex numbers
-# SO bauen, dass enfach dinge direkt im construktur mitgegeben werden können, anstatt sie separat connecten zu müssen
-# einen switcher bauenm der die variablenzuordnung switcht. dies könnte er auch mit mehreren machen und welche das sind, würde man über einen paraeter einspeisen?
-# XXX Eine Synchronisations-Barriere bauen? -> Evtl. notwendig für den RepeatBlock, damit erst alle Operationen bos zur Barriere (welche direkt am Input- bzw. Output-Layer sitzt, ausgeführt werden, ehe die Rekursion ausgeführt wird - sonst dürfte es ein undefiniertes Verhalten geben.
+# anstatt die pixel einzeln zu berechnen, könnte man versuchen, alles zu vektorisieren mit numpy - das dürfte eine erhebliche Beschleunigung des Programmes zur Folge haben.
+
 # Die Begriffe Factory und Template genau betrachten und ggf. vereinheitlichen bzw. korrigieren
 # Die Pins einer Box müssen beschrieben werden und vllt. auch eien allgemein beschreivung ddazu?
-# Daten in .yaml speichern?
+# Checken, ob und wo und wie das einführen von Namen für (ja für welche elemente alles? block, blackbox, conn, etc.?) sinnvoll ist für das debugging und debugging ausgaben und auch für den user, z.b. namen für einzelne blocks, um sie wiederzuerkennen.
+
 # Viele prüfungen einbauen, insb. beim connecten mit den indizes, deren ranges und ob der wert None ist, der als param übergeben wird und/oder ob intern der wert None ist, d.h. die anzahl an pins ist nicht fix.. mal separatm die logik übersichtlich notieren
+# XXX Auch eine Funktion machen zum prüfen, ob alle pins belegt sind, auch ovm drawer, damit sichergestellt ist, dass er überhaupt funktionieren kann
+
+# XXX class BoxFactory(CircuitFactory): -> was ist mit repeatbox factory?
+# repeatbox abspeichern einbauen und testen.
+
+# BlockFactory.inst(): # XXX und hier nicht direkt über filenamen gehen, sondern über einen eindeutigen namen, der in den filenamen umgesetzt iwrd oder auch in einer internen liste mit verfügbaren modulen verwaltet wird? ersteres scheint einfcah erzu sein
+            # XXX ConnTemplate.fromxxx() einfügen, dem direkt die objekte und nicht die id-strings übergeben werden. dadurch könnte ich z.B. in einem Fall wie folgt
+            # XXX geprüft werden, ob die pin parameter richtig gesetzt sind:
+            # XXX -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, 0)) -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, None))
+
+# bei blackbox.store() checken, ob datei schon existiert. argument, das angibt, ob ein überschreiben erzwungen werden soll
+# Daten in .yaml speichern? hierbei evtl. zwei separate felder verwenden für value (bei Const) und id/name bei BlackBox.
+
+funktionen:
+# die ganzen auskommentierten blöcke in deprecated anschauen, z.b. auch discretisize()
+# einen allgemein typ machen, der N+1 nputs und N outputs hat. der n+1te input gibt den skalierungsfaktor an, mit dem jeder eingang multipliziert entsprechend an seinem output ausgegeben wird -> insb. interessant zur skalierung des aktuellen punktes (x, y)
+# -> XXX Eine Synchronisations-Barriere bauen? -> Evtl. notwendig für den RepeatBlock, damit erst alle Operationen bos zur Barriere (welche direkt am Input- bzw. Output-Layer sitzt, ausgeführt werden, ehe die Rekursion ausgeführt wird - sonst dürfte es ein undefiniertes Verhalten geben.
+# -> diese barriere entspricht eigtl. genau einem multiplier mit faktor 1
+# -> Oder mit einer Variable, die mehrere elemente hat? damit könnte man auch einen punkt mit zwei koordinaten definieren, anstatt jede koordinate einzeln
+# XXX werte cappen ; was ist mit None? einen block, der none umwandeln in was anderes, z.b. eine konstante
+# eien funktion einbauen, die einen wert übernimmt, falls das argument None ist - evtl. selber bauen (wie meinte ich das? als blackbox?)
+# checken, ob sich matrizen und matrizenoperationen irgendwie flexibel einbauen lassen? am beispiel der rotationsmatrix.
+# check notes in templates/block.py
+# wie kann ich die output-werte-range fix definieren? also z.b.von 0..100 oder so?
+
+# bei objekten wie AddN in den Konstruktor eine liste mit objekten übergeben lassen, um schneller prototypen zu können
+# SO bauen, dass enfach dinge direkt im construktur mitgegeben werden können, anstatt sie separat connecten zu müssen
+
+
+# Infos
+#######
+* Namensgebung:
+  * cmc = crazy matrix circuit
+  * cmb = crazy matrix black (box)
+  * ??? cmr = crazy matrix repeat (box)

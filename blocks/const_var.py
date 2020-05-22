@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional
 
 from base.block import BlockFixed
+import numpy as np
 
 
 class Const(BlockFixed):
@@ -50,7 +51,7 @@ class Variable(BlockFixed):
     # end def
 
     def _calc_values(self):
-        if self._conn_in[0] is not None:
+        if self._conn_in[0].value is not None:
             self._pin_value[0] = self._conn_in[0].value
         # end if
     # end def

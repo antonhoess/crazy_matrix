@@ -6,7 +6,6 @@ from enum import Enum
 from blocks.const_var import *
 from blocks.math import *
 from blocks.deprecated import *
-#from templates.box import BoxFactory
 from base.block import IBlock
 
 
@@ -207,16 +206,16 @@ class BlockTemplateFactory:
         # end for
     # end def
 
-    def get_block_template(self, block_type: BlockType, value: Optional[Union[float, str]] = None) -> BlockTemplate:  # anstatt value doppelt uzu belegen, eher mit kwargs arbeiten? oder irgendwie die wertübergabe erzwingen?
+    # XXX anstatt value doppelt uzu belegen, eher mit kwargs arbeiten? oder irgendwie die wertübergabe erzwingen?
+    def get_block_template(self, block_type: BlockType, value: Optional[Union[float, str]] = None) -> BlockTemplate:
         for t, _type in enumerate(BlockType):
             if _type is block_type:
                 if not isinstance(value, str):
                     block_pin_count_template: BlockPinCountTemplate = self.__block_pin_count_templates[t]
                 else:
-                    from templates.box import BoxFactory
+                    from templates.box import BoxFactory  # Due to circular dependency
 
-                    bf: BoxFactory = BoxFactory()
-                    bf.load(value)
+                    bf: BoxFactory = BoxFactory().load(value)
                     block_pin_count_template: BlockPinCountTemplate = BlockPinCountTemplate(bf.n_in, bf.n_out)
                 # end if
 
@@ -239,12 +238,9 @@ class BlockFactory:
             return None
 
         elif block_template.type is BlockType.BOX:
-            from templates.box import BoxFactory
+            from templates.box import BoxFactory  # Due to circular dependency
 
-            bf: BoxFactory = BoxFactory()
-            bf.load(value)# XXX und hier nicht direkt über filenamen gehen, sondern über einen eindeutigen namen, der in den filenamen umgesetzt iwrd oder auch in einer internen liste mit verfügbaren
-            # # modulen verwaltet wird? ersteres scheint einfcah erzu sein
-            return bf.inst()  # XXX Hier einen Namen mit übergeben? Wie könnte dies nützlich sein?
+            return BoxFactory().load(value).inst()  # XXX Hier einen Namen mit übergeben? Wie könnte dies nützlich sein?
 
         elif block_template.type is BlockType.VAL_CONST:
             return Const(value)
@@ -314,6 +310,3 @@ class BlockFactory:
         # end if
     # end def
 # end class
-
-
-
