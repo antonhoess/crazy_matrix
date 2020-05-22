@@ -35,7 +35,11 @@ class Sub2(BlockFixed):
     # end def
 
     def _calc_values(self):
-        self._pin_value[0] = self._conn_in[0].value - self._conn_in[1].value
+        if self._conn_in[0].value is None or self._conn_in[1].value is None:
+            return None
+        else:
+            self._pin_value[0] = self._conn_in[0].value - self._conn_in[1].value
+        # end if
     # end def
 # end class
 

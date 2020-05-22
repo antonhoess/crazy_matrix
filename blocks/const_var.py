@@ -34,13 +34,6 @@ class ConstE(Const):
 # end class
 
 
-class ConstUser(Const):
-    def __init__(self, value: float):
-        Const.__init__(self, value)
-    # end def
-# end class
-
-
 class Variable(BlockFixed):
     def __init__(self, value: Optional[float] = None):
         BlockFixed.__init__(self, 1, 1)

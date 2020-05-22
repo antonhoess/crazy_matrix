@@ -12,6 +12,8 @@ class CircuitFactory:
     def __init__(self):
         self._blocks: List[BlockTemplate] = []
         self._conns: List[ConnTemplate] = []
+        self._n_in = None
+        self._n_out = None
     # end def
 
     def add_block(self, block: BlockTemplate) -> BlockTemplate:
@@ -87,7 +89,19 @@ class CircuitFactory:
 
     def _handle_line_check_for_block(self, fields: List[str]) -> bool:
         if fields[0] == "Block" and len(fields) == 6:
-            self._blocks.append(BlockTemplate(BlockType(fields[1]), int(fields[2]) if fields[2] != "-" else None, int(fields[3]), fields[4], float(fields[5]) if fields[5] != "-" else None))
+            block_type: BlockType = BlockType(fields[1])
+
+            field_5: Optional[Union[float, str]] = None
+
+            if block_type is not BlockType.BOX:
+                if fields[5] != "-":
+                    field_5 = float(fields[5])
+                # end if
+            else:
+                field_5 = fields[5]
+            # end if
+
+            self._blocks.append(BlockTemplate(block_type, int(fields[2]) if fields[2] != "-" else None, int(fields[3]), fields[4], field_5))
             return True
 
         else:
@@ -111,6 +125,9 @@ class CircuitFactory:
                 line = line.rstrip()
                 fields = line.split(";")
                 if len(fields) < 1:
+                    continue
+
+                if self._handle_line_check_for_meta_information(fields):
                     continue
 
                 if self._handle_line_check_for_block(fields):

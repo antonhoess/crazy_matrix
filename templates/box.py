@@ -6,22 +6,40 @@ from base.black_box import *
 
 # XXX was ist mit repeatbox
 class BoxFactory(CircuitFactory):
-    def __init__(self):
-        CircuitFactory.__init__(self)
-        # self.__n_in = n_in  # xXX diese klasse evtl. komplett neu implementieren oder die parameter in den konstrultor nehmen anstatt bei inst() zu übergeben, da dort die signatur nicht zusammenpasst - oder noch ganzt andere lösung?
-        # self.__n_in = n_in
+    def __init__(self):#, n_in: int, n_out: int):
+        CircuitFactory.__init__(self)  # , n_in, n_out, name)
+        #self.__n_in = n_in  # XXX diese klasse evtl. komplett neu implementieren oder die parameter in den konstrultor nehmen anstatt bei inst() zu übergeben, da dort die signatur nicht zusammenpasst - oder noch ganzt andere lösung?
+        #self.__n_out = n_out
+        self._n_in = 0
+        self._n_out = 0
         # self.__name = name
         self._bonds: List[BondTemplate] = []
     # end def
 
-    def add_bond(self, bond: BondTemplate):
-        self._bonds.append(bond)
+    @property
+    def n_in(self) -> int:
+        return self._n_in
     # end def
 
-    def inst(self, n_in: int, n_out: int, name: Optional[str] = None) -> BlackBox:
+    @property
+    def n_out(self) -> int:
+        return self._n_out
+    # end def
+
+    def add_bond(self, bond: BondTemplate):
+        self._bonds.append(bond)
+
+        if bond.side is BoxSide.IN:
+            self._n_in += 1
+        else:  # bond.side is BoxSide.OUT:
+            self._n_out += 1
+        # end if
+    # end def
+
+    def inst(self, name: Optional[str] = None) -> BlackBox:
         blocks: List[Dict[str, Block]] = []
         #box: IBox = IBox()
-        box: BlackBox = BlackBox(n_in, n_out, name)
+        box: BlackBox = BlackBox(self._n_in, self._n_out, name)
 
         def get_block_by_id(block_id: str):
             for block in blocks:
@@ -64,6 +82,10 @@ class BoxFactory(CircuitFactory):
         return box
     # end def
 
+    def _write_meta_information(self, file):
+        file.write(f"Meta;{self._n_in if self._n_in is not None else '-'};{self._n_out if self._n_out is not None else '-'}\n")
+    # end def
+
     def _write_bonds(self, file):
         for bond in self._bonds:
             file.write(f"Bond;{bond.side.value};{bond.block_id};{bond.block_pin if bond.block_pin is not None else '-'};{bond.box_pin}\n")
@@ -72,10 +94,22 @@ class BoxFactory(CircuitFactory):
 
     def store(self, filename: str):
         with open(filename, 'w') as f:
+            self._write_meta_information(f)
             self._write_blocks(f)
             self._write_conns(f)
             self._write_bonds(f)
         # end with
+    # end def
+
+    def _handle_line_check_for_meta_information(self, fields: List[str]) -> bool:
+        if fields[0] == "Meta" and len(fields) == 3:
+            self._n_in = int(fields[1]) if fields[1] != "-" else None
+            self._n_out = int(fields[2]) if fields[2] != "-" else None
+            return True
+
+        else:
+            return False
+        # end if
     # end def
 
     def _handle_line_check_for_bond(self, fields: List[str]) -> bool:
@@ -94,6 +128,9 @@ class BoxFactory(CircuitFactory):
                 line = line.rstrip()
                 fields = line.split(";")
                 if len(fields) < 1:
+                    continue
+
+                if self._handle_line_check_for_meta_information(fields):
                     continue
 
                 if self._handle_line_check_for_block(fields):

@@ -1,11 +1,13 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Union
 import uuid
 from enum import Enum
 
 from blocks.const_var import *
 from blocks.math import *
 from blocks.deprecated import *
+#from templates.box import BoxFactory
+from base.block import IBlock
 
 
 class IdGenerator:
@@ -34,6 +36,7 @@ class IdGenerator:
 class BlockType(Enum):
     SYS_IN_POS = "pos"
     SYS_OUT_DRAWER = "drawer"
+    BOX = "box"
     VAL_CONST = "const"
     VAL_CONST_E = "const_e"
     VAL_CONST_PI = "const_pi"
@@ -77,12 +80,12 @@ class BlockPinCountTemplate:
 
 
 class BlockTemplate:
-    def __init__(self, block_type: BlockType, n_in: Optional[int], n_out: int, item_id: str, value: Optional[float] = None):
+    def __init__(self, block_type: BlockType, n_in: Optional[int], n_out: int, item_id: str, value: Optional[Union[float, str]] = None):
         self.__type: BlockType = block_type
         self.__n_in: Optional[int] = n_in
         self.__n_out: int = n_out
         self.__id: str = item_id
-        self.__value: Optional[float] = value
+        self.__value: Optional[Union[float, str]] = value
     # end def
 
     def __str__(self):
@@ -123,7 +126,7 @@ class BlockTemplate:
 class BlockTemplateFactory:
     def __init__(self, id_gen: IdGenerator):
         self.__id_gen: IdGenerator = id_gen
-        self.__block_pin_count_templates: List[BlockPinCountTemplate] = []
+        self.__block_pin_count_templates: List[Optional[BlockPinCountTemplate]] = []
 
         for t in BlockType:
             if t is BlockType.SYS_IN_POS:
@@ -131,6 +134,9 @@ class BlockTemplateFactory:
 
             elif t is BlockType.SYS_OUT_DRAWER:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 0))
+
+            elif t is BlockType.BOX:
+                self.__block_pin_count_templates.append(None)  # Template not possible, since interface (pins) can differ
 
             elif t is BlockType.VAL_CONST:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(0, 1))
@@ -201,10 +207,18 @@ class BlockTemplateFactory:
         # end for
     # end def
 
-    def get_block_template(self, block_type: BlockType, value: Optional[float] = None) -> BlockTemplate:
+    def get_block_template(self, block_type: BlockType, value: Optional[Union[float, str]] = None) -> BlockTemplate:  # anstatt value doppelt uzu belegen, eher mit kwargs arbeiten? oder irgendwie die wertübergabe erzwingen?
         for t, _type in enumerate(BlockType):
             if _type is block_type:
-                block_pin_count_template: BlockPinCountTemplate = self.__block_pin_count_templates[t]
+                if not isinstance(value, str):
+                    block_pin_count_template: BlockPinCountTemplate = self.__block_pin_count_templates[t]
+                else:
+                    from templates.box import BoxFactory
+
+                    bf: BoxFactory = BoxFactory()
+                    bf.load(value)
+                    block_pin_count_template: BlockPinCountTemplate = BlockPinCountTemplate(bf.n_in, bf.n_out)
+                # end if
 
                 return BlockTemplate(_type, block_pin_count_template.n_in, block_pin_count_template.n_out, self.__id_gen.new_id(), value)
             # end if
@@ -217,12 +231,21 @@ class BlockTemplateFactory:
 
 class BlockFactory:
     @staticmethod
-    def inst(block_template: BlockTemplate, value: Optional[float] = None) -> Optional[Block]:
+    def inst(block_template: BlockTemplate, value: Optional[Union[float, str]] = None) -> Optional[IBlock]:
         if block_template.type is BlockType.SYS_IN_POS:
             return None
 
         elif block_template.type is BlockType.SYS_OUT_DRAWER:
             return None
+
+        elif block_template.type is BlockType.BOX:
+            from templates.box import BoxFactory
+
+            bf: BoxFactory = BoxFactory()
+            bf.load(value)# XXX und hier nicht direkt über filenamen gehen, sondern über einen eindeutigen namen, der in den filenamen umgesetzt iwrd oder auch in einer internen liste mit verfügbaren
+            # # modulen verwaltet wird? ersteres scheint einfcah erzu sein
+            return bf.inst()  # XXX Hier einen Namen mit übergeben? Wie könnte dies nützlich sein?
+
         elif block_template.type is BlockType.VAL_CONST:
             return Const(value)
 

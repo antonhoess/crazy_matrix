@@ -18,3 +18,6 @@
 # einen switcher bauenm der die variablenzuordnung switcht. dies könnte er auch mit mehreren machen und welche das sind, würde man über einen paraeter einspeisen?
 # XXX Eine Synchronisations-Barriere bauen? -> Evtl. notwendig für den RepeatBlock, damit erst alle Operationen bos zur Barriere (welche direkt am Input- bzw. Output-Layer sitzt, ausgeführt werden, ehe die Rekursion ausgeführt wird - sonst dürfte es ein undefiniertes Verhalten geben.
 # Die Begriffe Factory und Template genau betrachten und ggf. vereinheitlichen bzw. korrigieren
+# Die Pins einer Box müssen beschrieben werden und vllt. auch eien allgemein beschreivung ddazu?
+# Daten in .yaml speichern?
+# Viele prüfungen einbauen, insb. beim connecten mit den indizes, deren ranges und ob der wert None ist, der als param übergeben wird und/oder ob intern der wert None ist, d.h. die anzahl an pins ist nicht fix.. mal separatm die logik übersichtlich notieren

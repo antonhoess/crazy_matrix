@@ -15,7 +15,7 @@ def main(_argv: List[str]):
     p = c.point
     d = c.drawer
 
-    test = 22
+    test = 23
 
     if test == 0:
         pi = ConstUser(4.27)
@@ -728,6 +728,129 @@ def main(_argv: List[str]):
         bb_normal2.conn_to_prev_block(bb_dist2, 0, 0)
 
         dist_total.conn_to_prev_block(bb_normal2, 0, None)
+
+        d.conn_to_prev_block(dist_total, 0, 0)
+
+    elif test == 23:
+        fn_dist = "dist.cmb"
+        fn_normal = "normal.cmb"
+        fn_normal_dist = "normal_dist.cmb"
+
+        if True:
+            # > dist
+            # Test in multiple instances of a black box
+            # fn_dist = "dist.cmb"  # cmb = crazy matrix (black) box
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            dist_func = BoxFactory()
+
+            diff_x = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
+            diff_y = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
+            diff_x_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
+            diff_y_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
+            add_xy_sq = dist_func.add_block(btf.get_block_template(BlockType.MATH_ADD))
+            dist = dist_func.add_block(btf.get_block_template(BlockType.MATH_SQRT))
+            dist_rescaled = dist_func.add_block(btf.get_block_template(BlockType.MATH_MUL))
+
+            # Interconnect the blocks of the box
+            dist_func.add_conn(ConnTemplate(diff_x.id, 0, diff_x_sq.id, 0))
+            dist_func.add_conn(ConnTemplate(diff_y.id, 0, diff_y_sq.id, 0))
+            dist_func.add_conn(ConnTemplate(diff_x_sq.id, 0, add_xy_sq.id, None))
+            dist_func.add_conn(ConnTemplate(diff_y_sq.id, 0, add_xy_sq.id, None))
+            dist_func.add_conn(ConnTemplate(add_xy_sq.id, 0, dist.id, 0))
+            dist_func.add_conn(ConnTemplate(dist.id, 0, dist_rescaled.id, None))
+
+            # Bond the block of the box to the box pins
+            dist_func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 0, 0))
+            dist_func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 0, 1))
+            dist_func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 1, 2))
+            dist_func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 1, 3))
+            dist_func.add_bond(BondTemplate(BoxSide.IN, dist_rescaled.id, None, 4))
+            dist_func.add_bond(BondTemplate(BoxSide.OUT, dist_rescaled.id, 0, 0))
+
+            dist_func.store(fn_dist)
+
+            # normal distribution
+            # Test in multiple instances of a black box
+            # fn_normal = "normal.cmb"  # cmb = crazy matrix (black) box
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            normal_func = BoxFactory()
+
+            exp_term_fac = normal_func.add_block(btf.get_block_template(BlockType.VAL_CONST, -.5))
+            exp_term_x_sq = normal_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
+            exp_term = normal_func.add_block(btf.get_block_template(BlockType.MATH_MUL))
+            normal = normal_func.add_block(btf.get_block_template(BlockType.MATH_EXP))
+
+            # Interconnect the blocks of the box
+            normal_func.add_conn(ConnTemplate(exp_term_fac.id, 0, exp_term.id, None))
+            normal_func.add_conn(ConnTemplate(exp_term_x_sq.id, 0, exp_term.id, None))
+            normal_func.add_conn(ConnTemplate(exp_term.id, 0, normal.id, 0))
+
+            # Bond the block of the box to the box pins
+            normal_func.add_bond(BondTemplate(BoxSide.IN, exp_term_x_sq.id, 0, 0))
+            normal_func.add_bond(BondTemplate(BoxSide.OUT, normal.id, 0, 0))
+
+            normal_func.store(fn_normal)
+
+            # normal-dist function
+            ######################
+            # Test in multiple instances of a black box
+            # fn_normal_dist = "normal_dist.cmb"  # cmb = crazy matrix (black) box
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            normal_dist_func = BoxFactory()
+
+            dist = normal_dist_func.add_block(btf.get_block_template(BlockType.BOX, "dist.cmb"))
+            normal = normal_dist_func.add_block(btf.get_block_template(BlockType.BOX, "normal.cmb"))
+
+            # Interconnect the blocks of the box
+            normal_dist_func.add_conn(ConnTemplate(dist.id, 0, normal.id, 0))
+
+            # Bond the block of the box to the box pins
+            normal_dist_func.add_bond(BondTemplate(BoxSide.IN, dist.id, 0, 0))
+            normal_dist_func.add_bond(BondTemplate(BoxSide.IN, dist.id, 1, 1))
+            normal_dist_func.add_bond(BondTemplate(BoxSide.IN, dist.id, 2, 2))
+            normal_dist_func.add_bond(BondTemplate(BoxSide.IN, dist.id, 3, 3))
+            normal_dist_func.add_bond(BondTemplate(BoxSide.IN, dist.id, 4, 4))
+            normal_dist_func.add_bond(BondTemplate(BoxSide.OUT, normal.id, 0, 0))
+
+            normal_dist_func.store(fn_normal_dist)
+
+        else:
+            dist_func: BoxFactory = BoxFactory()
+            dist_func.load(fn_dist)
+
+            normal_func: BoxFactory = BoxFactory()
+            normal_func.load(fn_normal)
+
+            normal_dist_func: BoxFactory = BoxFactory()
+            normal_dist_func.load(fn_normal_dist)
+        # end if
+
+        scale = .05
+        points = ((70, 60, 1), (-100, 80, 2), (-80, -20, 1/3))
+
+        dist_total = AddN()
+
+        for pp in range(len(points)):
+            p_x = Const(points[pp][0])
+            p_y = Const(points[pp][1])
+            p_scale = scale * points[pp][2]
+
+            bb_normal_dist = normal_dist_func.inst("normal_dist_func")
+
+            bb_normal_dist.conn_to_prev_block(p, 0, 0)
+            bb_normal_dist.conn_to_prev_block(p, 1, 1)
+            bb_normal_dist.conn_to_prev_block(p_x, 0, 2)
+            bb_normal_dist.conn_to_prev_block(p_y, 0, 3)
+            bb_normal_dist.conn_to_prev_block(Const(p_scale), 0, 4)
+
+            dist_total.conn_to_prev_block(bb_normal_dist, 0, None)
+        # end for
 
         d.conn_to_prev_block(dist_total, 0, 0)
     # end if
