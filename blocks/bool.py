@@ -1,9 +1,19 @@
-from base.block import BlockFixed, Block
+from typing import Optional, Sequence
+
+from base.block import BlockFixed, Block, IBlock
 
 
 class AndN(Block):
-    def __init__(self):
+    def __init__(self, prev_blocks: Sequence[IBlock] = None):
         Block.__init__(self, None, 1)
+
+        if prev_blocks is not None:
+            for b in prev_blocks:
+                if b is not None:
+                    self.conn_to_prev_block(b)
+                # end if
+            # end for
+        # end if
     # end def
 
     def _calc_values(self):
@@ -26,8 +36,16 @@ class AndN(Block):
 
 
 class OrN(Block):
-    def __init__(self):
+    def __init__(self, prev_blocks: Sequence[IBlock] = None):
         Block.__init__(self, None, 1)
+
+        if prev_blocks is not None:
+            for b in prev_blocks:
+                if b is not None:
+                    self.conn_to_prev_block(b)
+                # end if
+            # end for
+        # end if
     # end def
 
     def _calc_values(self):
@@ -50,8 +68,12 @@ class OrN(Block):
 
 
 class Not(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None):
         BlockFixed.__init__(self, 1, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -65,8 +87,16 @@ class Not(BlockFixed):
 
 
 class Gt(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
         BlockFixed.__init__(self, 2, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
+
+        if prev_block2 is not None:
+            self.conn_to_prev_block(prev_block2)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -80,8 +110,16 @@ class Gt(BlockFixed):
 
 
 class Lt(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
         BlockFixed.__init__(self, 2, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
+
+        if prev_block2 is not None:
+            self.conn_to_prev_block(prev_block2)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -95,8 +133,16 @@ class Lt(BlockFixed):
 
 
 class EqN(Block):
-    def __init__(self):
+    def __init__(self, prev_blocks: Sequence[IBlock] = None):
         Block.__init__(self, None, 1)
+
+        if prev_blocks is not None:
+            for b in prev_blocks:
+                if b is not None:
+                    self.conn_to_prev_block(b)
+                # end if
+            # end for
+        # end if
     # end def
 
     def _calc_values(self):

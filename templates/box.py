@@ -2,17 +2,17 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from templates.bond import BondTemplate, BoxSide
-from base.black_box import BlackBox, IBlock
+from base.black_box import BlackBox, RepeatBox, IBlock, IBox
 from templates.block import BlockFactory
 from templates.circuit import CircuitFactory
 
 
-class BoxFactory(CircuitFactory):
+class BlackBoxFactory(CircuitFactory):
     def __init__(self):
         CircuitFactory.__init__(self)
         self._n_in = 0
         self._n_out = 0
-        self._bonds: List[BondTemplate] = []
+        self._bonds: List[BondTemplate] = list()
     # end def
 
     @property
@@ -29,17 +29,16 @@ class BoxFactory(CircuitFactory):
         self._bonds.append(bond)
 
         if bond.side is BoxSide.IN:
-            if len([b for b in self._bonds if b.side is BoxSide.IN and b.box_pin == bond.box_pin]) == 1:  # Prevent from counting in-pins with multiple connections more than once.
+            # Prevent from counting in-pins with multiple connections more than once.
+            if len([b for b in self._bonds if b.side is BoxSide.IN and b.box_pin == bond.box_pin]) == 1:
                 self._n_in += 1
         else:
             self._n_out += 1
         # end if
     # end def
 
-    def inst(self, name: Optional[str] = None) -> BlackBox:
+    def _do_inst(self, box: BlackBox) -> None:
         blocks: List[Dict[str, IBlock]] = list()
-        # XXX box: IBox = IBox()
-        box: BlackBox = BlackBox(self._n_in, self._n_out, name)
 
         def get_block_by_id(block_id: str) -> Optional[IBlock]:
             for b in blocks:
@@ -74,12 +73,17 @@ class BoxFactory(CircuitFactory):
                 box.assign_pin_value(block, bond.block_pin, bond.box_pin)
             # end if
         # end for
+    # end def
+
+    def inst(self, name: Optional[str] = None) -> BlackBox:
+        box: BlackBox = BlackBox(self._n_in, self._n_out, name)
+        self._do_inst(box)
 
         return box
     # end def
 
     def _write_meta_information(self, file):
-        file.write(f"Meta;{self._n_in if self._n_in is not None else '-'};{self._n_out if self._n_out is not None else '-'}\n")
+        file.write(f"Meta;{self._n_in};{self._n_out}\n")
     # end def
 
     def _write_bonds(self, file):
@@ -99,8 +103,8 @@ class BoxFactory(CircuitFactory):
 
     def _handle_line_check_for_meta_information(self, fields: List[str]) -> bool:
         if fields[0] == "Meta" and len(fields) == 3:
-            self._n_in = int(fields[1]) if fields[1] != "-" else None
-            self._n_out = int(fields[2]) if fields[2] != "-" else None
+            self._n_in = int(fields[1])
+            self._n_out = int(fields[2])
             return True
 
         else:
@@ -118,7 +122,7 @@ class BoxFactory(CircuitFactory):
         # end if
     # end def
 
-    def load(self, filename: str) -> BoxFactory:
+    def load(self, filename: str) -> BlackBoxFactory:
         with open(filename, 'r') as f:
             for line in f:
                 line = line.rstrip()
@@ -143,4 +147,28 @@ class BoxFactory(CircuitFactory):
 
         return self
     # end def
+# end class
+
+
+class RepeatBoxFactory(BlackBoxFactory):
+    def __init__(self):
+        BlackBoxFactory.__init__(self)
+
+        self._n_in_special = 1
+    # end def
+
+    def add_bond(self, bond: Optional[BondTemplate]):
+        if bond is not None:
+            BlackBoxFactory.add_bond(self, bond)
+        else:  # An empty pin with no bond to the circuit inside the box. E.g. for the parameters specifying the number fo repetitions in a RepeatBox
+            self._n_in += 1
+        # end if
+    # end def
+
+    def inst(self, name: Optional[str] = None) -> RepeatBox:
+        box: RepeatBox = RepeatBox(self._n_in - self._n_in_special, name)
+        self._do_inst(box)
+
+        return box
+        # end def
 # end class

@@ -11,6 +11,7 @@ from templates.block import IdGenerator, BlockTemplateFactory
 from templates.circuit import *
 from templates.box import *
 from templates.bond import *
+from base.block import Conn
 
 
 def main(_argv: List[str]):
@@ -19,7 +20,7 @@ def main(_argv: List[str]):
     p = c.point
     d = c.drawer
 
-    test = 24
+    test = 25
 
     if test == 0:
         pi = Const(4.27)
@@ -295,7 +296,38 @@ def main(_argv: List[str]):
         d.conn_to_prev_block(bb)
 
     elif test == 13:
-        # The implementation of SquareXn() is changed individually for an interesting test with the 5 operator and therefore is doesn't happen, what's supposed to
+        class SquareXn(BlockFixed):
+            def __init__(self, prev_block: Optional[BlockFixed], prev_pin: Optional[int] = None, name: Optional[str] = None):
+                BlockFixed.__init__(self, 2, 1, name)
+                self.__cnt = 0
+                self.__n_rep = 0
+                self.__inited = False
+
+                if prev_block is not None:  # Apply this shortcut to other items as well
+                    self.conn_to_prev_block(prev_block, prev_pin)
+                # end if
+
+            # end def
+
+            def _calc_values(self):
+                if not self.__inited:
+                    self.__n_rep = int(self._conn_in[1].value) - 1
+                    self.__inited = True
+                # end if
+
+                if self.__cnt < self.__n_rep:
+                    self.__cnt += 1
+                    x = Conn(self, 0).value  # This recursively triggers _calc_values()
+                else:
+                    self.__cnt = 0
+                    self.__inited = False
+                    x = self._conn_in[0].value
+                # end if
+
+                self._pin_value[0] = x * x
+            # end def
+        # end class
+
         sxn = SquareXn(None, name="10 squared 4 times")
         sxn.conn_to_prev_block(p, 0, 0)
         sxn.conn_to_prev_block(Const(10), 0, 1)
@@ -405,7 +437,7 @@ def main(_argv: List[str]):
         idg: IdGenerator = IdGenerator()
 
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-        my_add = BoxFactory()
+        my_add = BlackBoxFactory()
 
         addn: BlockTemplate = btf.get_block_template(BlockType.MATH_ADD)
         my_add.add_block(addn)
@@ -426,7 +458,7 @@ def main(_argv: List[str]):
         idg: IdGenerator = IdGenerator()
 
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-        my_func = BoxFactory()
+        my_func = BlackBoxFactory()
 
         fac: BlockTemplate = my_func.add_block(btf.get_block_template(BlockType.VAL_CONST, .3))
         muln: BlockTemplate = my_func.add_block(btf.get_block_template(BlockType.MATH_MUL))
@@ -444,7 +476,7 @@ def main(_argv: List[str]):
         my_func.store(out_filename)
 
         if True:
-            my_func: BoxFactory = BoxFactory()
+            my_func: BlackBoxFactory = BlackBoxFactory()
             my_func.load(out_filename)
         # end if
 
@@ -460,7 +492,7 @@ def main(_argv: List[str]):
         idg: IdGenerator = IdGenerator()
 
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-        dist_func = BoxFactory()
+        dist_func = BlackBoxFactory()
 
         # --
 
@@ -491,7 +523,7 @@ def main(_argv: List[str]):
         dist_func.store(out_filename)
 
         if True:
-            dist_func: BoxFactory = BoxFactory()
+            dist_func: BlackBoxFactory = BlackBoxFactory()
             dist_func.load(out_filename)
         # end if
 
@@ -514,7 +546,7 @@ def main(_argv: List[str]):
         idg: IdGenerator = IdGenerator()
 
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-        dist_func = BoxFactory()
+        dist_func = BlackBoxFactory()
 
         # --
 
@@ -545,7 +577,7 @@ def main(_argv: List[str]):
         dist_func.store(out_filename)
 
         if True:
-            dist_func: BoxFactory = BoxFactory()
+            dist_func: BlackBoxFactory = BlackBoxFactory()
             dist_func.load(out_filename)
         # end if
 
@@ -602,7 +634,7 @@ def main(_argv: List[str]):
         idg: IdGenerator = IdGenerator()
 
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-        dist_func = BoxFactory()
+        dist_func = BlackBoxFactory()
 
         diff_x = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
         diff_y = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
@@ -636,7 +668,7 @@ def main(_argv: List[str]):
         idg: IdGenerator = IdGenerator()
 
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-        normal_func = BoxFactory()
+        normal_func = BlackBoxFactory()
 
         exp_term_fac = normal_func.add_block(btf.get_block_template(BlockType.VAL_CONST, -.5))
         exp_term_x_sq = normal_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
@@ -655,10 +687,10 @@ def main(_argv: List[str]):
         normal_func.store(fn_normal)
 
         if True:
-            dist_func: BoxFactory = BoxFactory()
+            dist_func: BlackBoxFactory = BlackBoxFactory()
             dist_func.load(fn_dist)
 
-            normal_func: BoxFactory = BoxFactory()
+            normal_func: BlackBoxFactory = BlackBoxFactory()
             normal_func.load(fn_normal)
         # end if
 
@@ -732,7 +764,7 @@ def main(_argv: List[str]):
             idg: IdGenerator = IdGenerator()
 
             btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-            dist_func = BoxFactory()
+            dist_func = BlackBoxFactory()
 
             diff_x = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
             diff_y = dist_func.add_block(btf.get_block_template(BlockType.MATH_SUB))
@@ -764,7 +796,7 @@ def main(_argv: List[str]):
             idg: IdGenerator = IdGenerator()
 
             btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-            normal_func = BoxFactory()
+            normal_func = BlackBoxFactory()
 
             exp_term_fac = normal_func.add_block(btf.get_block_template(BlockType.VAL_CONST, -.5))
             exp_term_x_sq = normal_func.add_block(btf.get_block_template(BlockType.MATH_SQ))
@@ -787,7 +819,7 @@ def main(_argv: List[str]):
             idg: IdGenerator = IdGenerator()
 
             btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-            normal_dist_func = BoxFactory()
+            normal_dist_func = BlackBoxFactory()
 
             dist = normal_dist_func.add_block(btf.get_block_template(BlockType.BOX, "dist.cmb"))
             normal = normal_dist_func.add_block(btf.get_block_template(BlockType.BOX, "normal.cmb"))
@@ -806,13 +838,13 @@ def main(_argv: List[str]):
             normal_dist_func.store(fn_normal_dist)
 
         else:
-            dist_func: BoxFactory = BoxFactory()
+            dist_func: BlackBoxFactory = BlackBoxFactory()
             dist_func.load(fn_dist)
 
-            normal_func: BoxFactory = BoxFactory()
+            normal_func: BlackBoxFactory = BlackBoxFactory()
             normal_func.load(fn_normal)
 
-            normal_dist_func: BoxFactory = BoxFactory()
+            normal_dist_func: BlackBoxFactory = BlackBoxFactory()
             normal_dist_func.load(fn_normal_dist)
         # end if
 
@@ -843,13 +875,13 @@ def main(_argv: List[str]):
         # Added distance of three points using a black box consisting of two other black boxes
         fn_mat_rot = "mat_rot.cmb"
 
-        store_and_load = True
+        store_and_load = False
 
         if not store_and_load:
             idg: IdGenerator = IdGenerator()
 
             btf: BlockTemplateFactory = BlockTemplateFactory(idg)
-            mat_rot = BoxFactory()
+            mat_rot = BlackBoxFactory()
 
             mul_11 = mat_rot.add_block(btf.get_block_template(BlockType.MATH_MUL))
             mul_12 = mat_rot.add_block(btf.get_block_template(BlockType.MATH_MUL))
@@ -892,20 +924,20 @@ def main(_argv: List[str]):
             mat_rot.store(fn_mat_rot)
 
         else:
-            mat_rot: BoxFactory = BoxFactory()
+            mat_rot: BlackBoxFactory = BlackBoxFactory()
             mat_rot.load(fn_mat_rot)
         # end if
 
         # --
 
-        test = 0  # Select experiment
+        test = 1  # Select experiment
 
         scale = 5.
         bb_mat_rot = mat_rot.inst("rotation_matrix")
 
         if test == 0:
             fn_dist = "dist.cmb"  # From previous step
-            dist_func: BoxFactory = BoxFactory()
+            dist_func: BlackBoxFactory = BlackBoxFactory()
             dist_func.load(fn_dist)
             bb_dist = dist_func.inst("dist_func")
 
@@ -936,6 +968,39 @@ def main(_argv: List[str]):
         # end if
 
         d.conn_to_prev_block(bb_mat_rot, 1, 0)
+
+    elif test == 25:
+        # Test using a repeat box to square a number n times
+        fn_square_n_times = "square_n_times.cmr"
+
+        idg: IdGenerator = IdGenerator()
+
+        btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        square_n_times = RepeatBoxFactory()
+
+        sq_nx = square_n_times.add_block(btf.get_block_template(BlockType.MATH_SQ))
+
+        # Interconnect the blocks of the box
+        # -> Nothing to connect
+
+        # Bond the block of the box to the box pins
+        square_n_times.add_bond(BondTemplate(BoxSide.IN, sq_nx.id, 0, 0))
+        square_n_times.add_bond(BondTemplate.empty())
+        square_n_times.add_bond(BondTemplate(BoxSide.OUT, sq_nx.id, 0, 0))
+
+        square_n_times.store(fn_square_n_times)
+
+        if True:
+            square_n_times: RepeatBoxFactory = RepeatBoxFactory()
+            square_n_times.load(fn_square_n_times)
+        # end if
+
+        # --
+        square_n_times_func = square_n_times.inst("square_n_times")
+        square_n_times_func.conn_to_prev_block(p, 0, 0)
+        square_n_times_func.conn_to_prev_block(Const(3), 0, 1)
+
+        d.conn_to_prev_block(square_n_times_func, 0, 0)
     # end if
 
     cm = CrazyMatrix(c)

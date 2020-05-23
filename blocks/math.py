@@ -1,13 +1,21 @@
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, Sequence
 import numpy as np
 
-from base.block import Block, BlockFixed
+from base.block import Block, BlockFixed, IBlock
 
 
 class AddN(Block):
-    def __init__(self):
+    def __init__(self, prev_blocks: Sequence[IBlock] = None):
         Block.__init__(self, None, 1)
+
+        if prev_blocks is not None:
+            for b in prev_blocks:
+                if b is not None:
+                    self.conn_to_prev_block(b)
+                # end if
+            # end for
+        # end if
     # end def
 
     def _calc_values(self):
@@ -30,9 +38,16 @@ class AddN(Block):
 
 
 class Sub2(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
         BlockFixed.__init__(self, 2, 1)
 
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
+
+        if prev_block2 is not None:
+            self.conn_to_prev_block(prev_block2)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -46,8 +61,16 @@ class Sub2(BlockFixed):
 
 
 class MulN(Block):
-    def __init__(self):
+    def __init__(self, prev_blocks: Sequence[IBlock] = None):
         Block.__init__(self, None, 1)
+
+        if prev_blocks is not None:
+            for b in prev_blocks:
+                if b is not None:
+                    self.conn_to_prev_block(b)
+                # end if
+            # end for
+        # end if
     # end def
 
     def _calc_values(self):
@@ -70,8 +93,16 @@ class MulN(Block):
 
 
 class Div2(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
         BlockFixed.__init__(self, 2, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
+
+        if prev_block2 is not None:
+            self.conn_to_prev_block(prev_block2)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -85,8 +116,12 @@ class Div2(BlockFixed):
 
 
 class Abs(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None):
         BlockFixed.__init__(self, 1, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -100,10 +135,10 @@ class Abs(BlockFixed):
 
 
 class Minus(BlockFixed):
-    def __init__(self, prev_block: Optional[BlockFixed] = None):
+    def __init__(self, prev_block: Optional[IBlock] = None):
         BlockFixed.__init__(self, 1, 1)
 
-        if prev_block is not None:  # XXX Apply this shortcut to other items as well
+        if prev_block is not None:
             self.conn_to_prev_block(prev_block)
         # end if
     # end def
@@ -119,10 +154,10 @@ class Minus(BlockFixed):
 
 
 class Inv(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):  # XXX IBlock überall durchziehen? an funktionen testen, die ich aktuell in Verwendung habe
+    def __init__(self, prev_block: Optional[IBlock] = None):
         BlockFixed.__init__(self, 1, 1)
 
-        if prev_block is not None:  # Apply this shortcut to other items as well
+        if prev_block is not None:
             self.conn_to_prev_block(prev_block)
         # end if
     # end def
@@ -138,8 +173,16 @@ class Inv(BlockFixed):
 
 
 class Mod(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
         BlockFixed.__init__(self, 2, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
+
+        if prev_block2 is not None:
+            self.conn_to_prev_block(prev_block2)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -153,8 +196,12 @@ class Mod(BlockFixed):
 
 
 class Exp(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None):
         BlockFixed.__init__(self, 1, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -168,8 +215,16 @@ class Exp(BlockFixed):
 
 
 class Log(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
         BlockFixed.__init__(self, 2, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
+
+        if prev_block2 is not None:
+            self.conn_to_prev_block(prev_block2)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -183,8 +238,12 @@ class Log(BlockFixed):
 
 
 class Ln(BlockFixed):
-    def __init__(self):
+    def __init__(self, prev_block: Optional[IBlock] = None):
         BlockFixed.__init__(self, 1, 1)
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -198,11 +257,15 @@ class Ln(BlockFixed):
 
 
 class Pow(BlockFixed):
-    def __init__(self, prev_block: Optional[BlockFixed] = None):
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
         BlockFixed.__init__(self, 2, 1)
 
-        if prev_block is not None:  # Apply this shortcut to other items as well
+        if prev_block is not None:
             self.conn_to_prev_block(prev_block)
+        # end if
+
+        if prev_block2 is not None:
+            self.conn_to_prev_block(prev_block2)
         # end if
     # end def
 
@@ -217,10 +280,10 @@ class Pow(BlockFixed):
 
 
 class Sq(BlockFixed):
-    def __init__(self, prev_block: Optional[BlockFixed] = None):
+    def __init__(self, prev_block: Optional[IBlock] = None):
         BlockFixed.__init__(self, 1, 1)
 
-        if prev_block is not None:  # Apply this shortcut to other items as well
+        if prev_block is not None:
             self.conn_to_prev_block(prev_block)
         # end if
     # end def
@@ -236,10 +299,10 @@ class Sq(BlockFixed):
 
 
 class Sqrt(BlockFixed):
-    def __init__(self, prev_block: Optional[BlockFixed] = None):
+    def __init__(self, prev_block: Optional[IBlock] = None):
         BlockFixed.__init__(self, 1, 1)
 
-        if prev_block is not None:  # Apply this shortcut to other items as well
+        if prev_block is not None:
             self.conn_to_prev_block(prev_block)
         # end if
     # end def
@@ -255,8 +318,16 @@ class Sqrt(BlockFixed):
 
 
 class MinN(Block):
-    def __init__(self):
+    def __init__(self, prev_blocks: Sequence[IBlock] = None):
         Block.__init__(self, None, 1)
+
+        if prev_blocks is not None:
+            for b in prev_blocks:
+                if b is not None:
+                    self.conn_to_prev_block(b)
+                # end if
+            # end for
+        # end if
     # end def
 
     def _calc_values(self):
@@ -284,9 +355,16 @@ class MinN(Block):
 
 
 class MaxN(Block):
-    def __init__(self):
+    def __init__(self, prev_blocks: Sequence[IBlock] = None):
         Block.__init__(self, None, 1)
 
+        if prev_blocks is not None:
+            for b in prev_blocks:
+                if b is not None:
+                    self.conn_to_prev_block(b)
+                # end if
+            # end for
+        # end if
     # end def
 
     def _calc_values(self):
@@ -314,9 +392,13 @@ class MaxN(Block):
 
 
 class Sin(BlockFixed):
-    def __init__(self, deg: bool = True):
+    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True):
         BlockFixed.__init__(self, 1, 1)
         self.__deg = deg
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -335,9 +417,13 @@ class Sin(BlockFixed):
 
 
 class Cos(BlockFixed):
-    def __init__(self, deg: bool = True):
+    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True):
         BlockFixed.__init__(self, 1, 1)
         self.__deg = deg
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
     # end def
 
     def _calc_values(self):
@@ -356,9 +442,13 @@ class Cos(BlockFixed):
 
 
 class Tan(BlockFixed):
-    def __init__(self, deg: bool = True):
+    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True):
         BlockFixed.__init__(self, 1, 1)
         self.__deg = deg
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
     # end def
 
     def _calc_values(self):

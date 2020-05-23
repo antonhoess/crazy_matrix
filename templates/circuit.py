@@ -36,6 +36,9 @@ class CircuitFactory:
             elif block_id == "1":
                 return circuit.drawer
 
+            elif block_id == "2":
+                return circuit.size
+
             else:
                 for b in blocks:
                     if b["id"] == block_id:

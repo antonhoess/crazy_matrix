@@ -11,6 +11,7 @@ class CrazyMatrix:
         self.__v_min = 0
         self.__v_max = None
         self.__circuit = circuit
+        self.__circuit.set_size(self.__w, self.__h)
     # end def
 
     @staticmethod  # XXX

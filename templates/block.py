@@ -5,7 +5,6 @@ from enum import Enum
 
 from blocks.const_var import *
 from blocks.math import *
-from blocks.deprecated import *
 from base.block import IBlock
 
 
@@ -16,7 +15,7 @@ class IdGenerator:
 
     def new_id(self) -> str:
         while True:
-            new_id = uuid.uuid4().hex
+            new_id = uuid.uuid4().hex[:8]
 
             # Try again to find a free uuid, if this one is already in use (which is very unlikely)
             if new_id not in self.__ids:
@@ -213,9 +212,9 @@ class BlockTemplateFactory:
                 if not isinstance(value, str):
                     block_pin_count_template: BlockPinCountTemplate = self.__block_pin_count_templates[t]
                 else:
-                    from templates.box import BoxFactory  # Due to circular dependency
+                    from templates.box import BlackBoxFactory  # Due to circular dependency
 
-                    bf: BoxFactory = BoxFactory().load(value)
+                    bf: BlackBoxFactory = BlackBoxFactory().load(value)
                     block_pin_count_template: BlockPinCountTemplate = BlockPinCountTemplate(bf.n_in, bf.n_out)
                 # end if
 
@@ -238,9 +237,9 @@ class BlockFactory:
             return None
 
         elif block_template.type is BlockType.BOX:
-            from templates.box import BoxFactory  # Due to circular dependency
+            from templates.box import BlackBoxFactory  # Due to circular dependency
 
-            return BoxFactory().load(value).inst()  # XXX Hier einen Namen mit übergeben? Wie könnte dies nützlich sein?
+            return BlackBoxFactory().load(value).inst()  # XXX Hier einen Namen mit übergeben? Wie könnte dies nützlich sein?
 
         elif block_template.type is BlockType.VAL_CONST:
             return Const(value)

@@ -35,14 +35,19 @@ class IBlock(ABC):
 
 class IBox(ABC):
     @abstractmethod
-    def assign_conn_in(self, block: BlockFixed, block_pin: int, in_pin: int) -> bool:
+    def assign_conn_in(self, block: IBlock, block_pin: int, in_pin: int) -> bool:
         raise NotImplementedError
     # end def
 
     @abstractmethod
-    def assign_pin_value(self, block: BlockFixed, block_pin: int, out_pin: int) -> bool:
+    def assign_pin_value(self, block: IBlock, block_pin: int, out_pin: int) -> bool:
         raise NotImplementedError
     # end def
+# end class
+
+
+class IBoxBlock(IBox, IBlock):  # XXX
+    pass
 # end class
 
 

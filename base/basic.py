@@ -57,15 +57,53 @@ class DynamicPoint(Point):
 # end class
 
 
+class Size(BlockFixed):
+    def __init__(self, width: int = 0, height: int = 0):
+        BlockFixed.__init__(self, 0, 2)
+
+        self.set_size(width, height)
+    # end def
+
+    @property
+    def width(self) -> int:
+        return int(self._pin_value[0])
+    # end def
+
+    @property
+    def height(self) -> int:
+        return int(self._pin_value[1])
+    # end def
+
+    def set_size(self, width: int, height: int):
+        self._pin_value[0] = width
+        self._pin_value[1] = height
+    # end def
+
+    def _calc_values(self):
+        pass
+    # end def
+# end class
+
+
 class Circuit:
     def __init__(self):
         self.__cur_pos = DynamicPoint(0, 0)
         self.__drawer = Drawer()
+        self.__size = Size()
+    # end def
+
+    def set_size(self, width: int, height: int):
+        self.__size.set_size(width, height)
     # end def
 
     @property
     def point(self):
         return self.__cur_pos
+    # end def
+
+    @property
+    def size(self):
+        return self.__size
     # end def
 
     @property
