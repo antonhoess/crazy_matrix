@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -5,13 +7,14 @@ from base.basic import Circuit
 
 
 class CrazyMatrix:
-    def __init__(self, circuit: Circuit):
-        self.__w = 400
-        self.__h = 200
+    def __init__(self, circuit: Circuit, width: int, height: int, cmap: Optional[str] = None):
+        self.__w: int = width
+        self.__h: int = height
         self.__v_min = 0
         self.__v_max = None
         self.__circuit = circuit
         self.__circuit.set_size(self.__w, self.__h)
+        self.__cmap = cmap if cmap is not None else "Greys"  # "RdYlGn"
     # end def
 
     @staticmethod  # XXX
@@ -40,14 +43,13 @@ class CrazyMatrix:
                 x = _x + offset_x
                 y = _y + offset_y
                 z[_x, _y] = self.__circuit.eval(x, y)
-                #z[_x, _y] = self.mandelbrot(x * scale, y * scale)
+                # z[_x, _y] = self.mandelbrot(x * scale, y * scale)
             # end for
         # end for
 
         fig, ax = plt.subplots()
-        cmap = "RdYlGn"
-        cmap = "Greys"
-        im = ax.imshow(np.transpose(z), interpolation="nearest", cmap=cmap, origin='lower', extent=[-self.__w / 2, self.__w / 2, -self.__h / 2, self.__h / 2])#, vmax=0)#, vmax=np.abs(Z).max(), vmin=-np.abs(Z).max())  # interpolation="bilinear"
+
+        ax.imshow(np.transpose(z), interpolation="nearest", cmap=self.__cmap, origin='lower', extent=[-self.__w / 2, self.__w / 2, -self.__h / 2, self.__h / 2])#, vmax=0)#, vmax=np.abs(Z).max(), vmin=-np.abs(Z).max())  # interpolation="bilinear"
         ax.set_aspect("equal")
 
         plt.show()

@@ -21,7 +21,6 @@ class BondTemplate:
         return f"BondTemplate: '{self.__block_id[:8]}:{self.__block_pin}' <=> '{self.__side}:{self.__box_pin}'"
     # end def
 
-    # XXX löschen?
     @staticmethod
     def empty() -> None:
         return None

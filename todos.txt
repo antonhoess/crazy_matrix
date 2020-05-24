@@ -6,11 +6,14 @@
 # XXX str und repr implementieren und dadurch auch leicht ersichtlich machen, wer mit wem verbunden ist
 # eienen normalizer machen, der den punkt transliert, invertiert, rotiert,etc. # das sind eher schon die matrizen sachen. wofür? für die nicht die koordinaten  von -200 - 200 gehen, sondern eher von -1 bis 1
 
+
 black boxen
 -----------
 blackbox machen, die alles von -1..1 skaliert in jede dimension
 .. oder eine, die polar koordinaten umwandelt
-auch einen block machen, der den pint versetzt und skaliert
+auch einen block machen, der den pin versetzt und skaliert
+
+if else etc. blocks einfügen?
 
 # XXX anstatt für jedes pixel immer alles neu durchzurechnen, vllt. über setter funktionen setzen, der wert welcher conn wurde geändert und nur dann den block neu berechnen, sonst nicht
 
@@ -30,7 +33,6 @@ auch einen block machen, der den pint versetzt und skaliert
             # XXX -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, 0)) -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, None))
                save blocks in a configurable folder
 
-# bei blackbox.store() checken, ob datei schon existiert. argument, das angibt, ob ein überschreiben erzwungen werden soll
 # Daten in .yaml speichern? hierbei evtl. zwei separate felder verwenden für value (bei Const) und id/name bei BlackBox.
 
 funktionen
@@ -50,6 +52,9 @@ beim hinzufügen von bonds in einer repeatbox muss auf die n_out des input layer
 
 als näcshtes einen test mit einer repeat box machen, in der zahlen immer verdoppelt werden aber wenn ein bestimmter wert überschritten wrid, dieser am ende ausgegeben wird. also 5 * 2 * 2 * ... * 2 und als limit 20 angeben.
 
+einen neuen ordner mit blocks mit zufallsvariablen machen
+
+anstatt auf einmal zu zeichnen, das zeichnen in einen thread auslagern, der (parametrisiert) gröber rastert (jedoch mit gleichen x und y werten) und wie bei gif nach und nach erst genauer wird - eine art preview, die schnelelr erahnen kässt, wohin die reise geht
 
 
 # Infos

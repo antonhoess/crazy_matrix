@@ -121,8 +121,8 @@ class CircuitFactory:
         # end if
     # end def
 
-    def load(self, filename: str):
-        with open(filename, 'r') as f:
+    def load(self, filename: str) -> CircuitFactory:
+        with open(filename, "r") as f:
             for line in f:
                 line = line.rstrip()
                 fields = line.split(";")
@@ -136,5 +136,8 @@ class CircuitFactory:
                     continue
                 # end if
             # end for
+        # end with
+
+        return self
     # end def
 # end class

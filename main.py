@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import List, Optional
 import sys
 
 from base.basic import Point
@@ -6,11 +8,13 @@ from blocks.bool import *
 from blocks.math import *
 from blocks.const_var import *
 from blocks.deprecated import *
-from crazy_matrix import CrazyMatrix
-from templates.block import IdGenerator, BlockTemplateFactory
-from templates.circuit import *
-from templates.box import *
-from templates.bond import *
+from core.crazy_matrix import CrazyMatrix
+from core.block_manager import BlockManager
+from templates.block import IdGenerator, BlockTemplateFactory, BlockTemplate, BlockType
+from templates.circuit import Circuit, CircuitFactory
+from templates.box import BlackBoxFactory, RepeatBoxFactory
+from templates.bond import BoxSide, BondTemplate
+from templates.conn import ConnTemplate
 from base.block import Conn
 
 
@@ -19,6 +23,9 @@ def main(_argv: List[str]):
 
     p = c.point
     d = c.drawer
+
+    bm = BlockManager(base_dir="user_blocks")
+    bm.scan_dir()
 
     test = 25
 
@@ -204,7 +211,7 @@ def main(_argv: List[str]):
             gravity.conn_to_prev_block(Const(1.), 0, 0)
             gravity.conn_to_prev_block(dist, 0, 1)
 
-            dists.add_conn_to_prev_block(gravity)
+            dists.conn_to_prev_block(gravity)
         # end for
 
         d.conn_to_prev_block(dists)
@@ -428,7 +435,7 @@ def main(_argv: List[str]):
 
         c = cf.inst()
 
-        cm = CrazyMatrix(c)
+        cm = CrazyMatrix(c, width=100, height=100)
 
         cm.plot()
 
@@ -453,8 +460,8 @@ def main(_argv: List[str]):
         d.conn_to_prev_block(bb, 0, 0)
 
     elif test == 19:
-        # Definces, stores and loads a black box
-        out_filename = "test01.cmb"  # cmb = crazy matrix (black) box
+        # Defines, stores and loads a black box
+        out_filename = "test01"  # cmb = crazy matrix (black) box
         idg: IdGenerator = IdGenerator()
 
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
@@ -473,11 +480,9 @@ def main(_argv: List[str]):
         my_func.add_bond(BondTemplate(BoxSide.IN, addn.id, None, 1))
         my_func.add_bond(BondTemplate(BoxSide.OUT, addn.id, 0, 0))
 
-        my_func.store(out_filename)
-
         if True:
-            my_func: BlackBoxFactory = BlackBoxFactory()
-            my_func.load(out_filename)
+            bm.store(my_func, out_filename)
+            my_func: BlackBoxFactory = bm.load(out_filename)
         # end if
 
         bb = my_func.inst("my_func")
@@ -717,7 +722,7 @@ def main(_argv: List[str]):
 
         # Point 1
         bb_dist1 = dist_func.inst("dist_func")
-        bb_normal1 = normal_func.inst( "normal_func")
+        bb_normal1 = normal_func.inst("normal_func")
 
         p1_x = Const(-100)
         p1_y = Const(80)
@@ -970,8 +975,10 @@ def main(_argv: List[str]):
         d.conn_to_prev_block(bb_mat_rot, 1, 0)
 
     elif test == 25:
+        store_and_load = True
+
         # Test using a repeat box to square a number n times
-        fn_square_n_times = "square_n_times.cmr"
+        fn_square_n_times = "square_n_times"
 
         idg: IdGenerator = IdGenerator()
 
@@ -988,11 +995,9 @@ def main(_argv: List[str]):
         square_n_times.add_bond(BondTemplate.empty())
         square_n_times.add_bond(BondTemplate(BoxSide.OUT, sq_nx.id, 0, 0))
 
-        square_n_times.store(fn_square_n_times)
-
-        if True:
-            square_n_times: RepeatBoxFactory = RepeatBoxFactory()
-            square_n_times.load(fn_square_n_times)
+        if store_and_load:
+            bm.store(square_n_times, fn_square_n_times, overwrite=True)
+            square_n_times = bm.load(fn_square_n_times)
         # end if
 
         # --
@@ -1003,8 +1008,7 @@ def main(_argv: List[str]):
         d.conn_to_prev_block(square_n_times_func, 0, 0)
     # end if
 
-    cm = CrazyMatrix(c)
-
+    cm = CrazyMatrix(circuit=c, width=400, height=200)
     cm.plot()
 # end def
 

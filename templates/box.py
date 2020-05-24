@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from templates.bond import BondTemplate, BoxSide
-from base.black_box import BlackBox, RepeatBox, IBlock, IBox
+from base.black_box import BlackBox, RepeatBox, IBlock
 from templates.block import BlockFactory
 from templates.circuit import CircuitFactory
 
@@ -122,7 +122,7 @@ class BlackBoxFactory(CircuitFactory):
         # end if
     # end def
 
-    def load(self, filename: str) -> BlackBoxFactory:
+    def _load(self, filename: str):
         with open(filename, 'r') as f:
             for line in f:
                 line = line.rstrip()
@@ -144,6 +144,10 @@ class BlackBoxFactory(CircuitFactory):
                 # end if
             # end for
         # end with
+    # end def
+
+    def load(self, filename: str) -> BlackBoxFactory:
+        self._load(filename)
 
         return self
     # end def
@@ -170,5 +174,11 @@ class RepeatBoxFactory(BlackBoxFactory):
         self._do_inst(box)
 
         return box
-        # end def
+    # end def
+
+    def load(self, filename: str) -> RepeatBoxFactory:
+        self._load(filename)
+
+        return self
+    # end def
 # end class
