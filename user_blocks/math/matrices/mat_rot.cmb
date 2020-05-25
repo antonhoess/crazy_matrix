@@ -1,29 +1,135 @@
-Meta;3;2
-Block;mul;-;1;6638b3b2;-
-Block;mul;-;1;f34ffd9f;-
-Block;mul;-;1;17fc0e7e;-
-Block;mul;-;1;ed859e88;-
-Block;cos;1;1;10ff3fa7;-
-Block;sin;1;1;c0547ec8;-
-Block;sin;1;1;868c31e6;-
-Block;cos;1;1;c491540e;-
-Block;sub;2;1;ceca136e;-
-Block;add;-;1;cc50fdba;-
-Conn;10ff3fa7;0;6638b3b2;-
-Conn;c0547ec8;0;f34ffd9f;-
-Conn;868c31e6;0;17fc0e7e;-
-Conn;c491540e;0;ed859e88;-
-Conn;6638b3b2;0;ceca136e;0
-Conn;f34ffd9f;0;ceca136e;1
-Conn;17fc0e7e;0;cc50fdba;-
-Conn;ed859e88;0;cc50fdba;-
-Bond;in;6638b3b2;-;0
-Bond;in;17fc0e7e;-;0
-Bond;in;f34ffd9f;-;1
-Bond;in;ed859e88;-;1
-Bond;in;10ff3fa7;0;2
-Bond;in;c0547ec8;0;2
-Bond;in;868c31e6;0;2
-Bond;in;c491540e;0;2
-Bond;out;ceca136e;0;0
-Bond;out;cc50fdba;0;1
+meta:
+  version: '1.0'
+  desc: "Performs a matrix multiplication of this rotation matrix (R[theta]) with\
+    \ a given vector (x) and the rotation angle theta [degree]: R\xD7x.\n\nIN pins:\n\
+    * [0] X-coordinate of point.\n* [1] Y-coordinate of point.\n* [2] Angle theta\
+    \ for the rotation matrix R.\n\nOUT pins:\n* [0] X-coordinate of the rotated point.\n\
+    * [1] Y-coordinate of the rotated point."
+box:
+  n_in: 3
+  n_out: 2
+blocks:
+- name: mul_11
+  type: mul
+  n_in: null
+  n_out: 1
+  id: 28ef
+- name: mul_12
+  type: mul
+  n_in: null
+  n_out: 1
+  id: 6eb5
+- name: mul_21
+  type: mul
+  n_in: null
+  n_out: 1
+  id: 290a
+- name: mul_22
+  type: mul
+  n_in: null
+  n_out: 1
+  id: e5bd
+- name: cos_11
+  type: cos
+  n_in: 1
+  n_out: 1
+  id: 55b6
+- name: sin_12
+  type: sin
+  n_in: 1
+  n_out: 1
+  id: e64c
+- name: sin_21
+  type: sin
+  n_in: 1
+  n_out: 1
+  id: '2546'
+- name: cos_22
+  type: cos
+  n_in: 1
+  n_out: 1
+  id: 97b7
+- name: sub_11_12
+  type: sub
+  n_in: 2
+  n_out: 1
+  id: 58dd
+- name: add_21_22
+  type: add
+  n_in: null
+  n_out: 1
+  id: 1adb
+conns:
+- in_block_id: 55b6
+  in_block_pin: 0
+  out_block_id: 28ef
+  out_block_pin: null
+- in_block_id: e64c
+  in_block_pin: 0
+  out_block_id: 6eb5
+  out_block_pin: null
+- in_block_id: '2546'
+  in_block_pin: 0
+  out_block_id: 290a
+  out_block_pin: null
+- in_block_id: 97b7
+  in_block_pin: 0
+  out_block_id: e5bd
+  out_block_pin: null
+- in_block_id: 28ef
+  in_block_pin: 0
+  out_block_id: 58dd
+  out_block_pin: 0
+- in_block_id: 6eb5
+  in_block_pin: 0
+  out_block_id: 58dd
+  out_block_pin: 1
+- in_block_id: 290a
+  in_block_pin: 0
+  out_block_id: 1adb
+  out_block_pin: null
+- in_block_id: e5bd
+  in_block_pin: 0
+  out_block_id: 1adb
+  out_block_pin: null
+bonds:
+- side: in
+  block_id: 28ef
+  block_pin: null
+  box_pin: 0
+- side: in
+  block_id: 290a
+  block_pin: null
+  box_pin: 0
+- side: in
+  block_id: 6eb5
+  block_pin: null
+  box_pin: 1
+- side: in
+  block_id: e5bd
+  block_pin: null
+  box_pin: 1
+- side: in
+  block_id: 55b6
+  block_pin: 0
+  box_pin: 2
+- side: in
+  block_id: e64c
+  block_pin: 0
+  box_pin: 2
+- side: in
+  block_id: '2546'
+  block_pin: 0
+  box_pin: 2
+- side: in
+  block_id: 97b7
+  block_pin: 0
+  box_pin: 2
+- side: out
+  block_id: 58dd
+  block_pin: 0
+  box_pin: 0
+- side: out
+  block_id: 1adb
+  block_pin: 0
+  box_pin: 1

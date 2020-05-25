@@ -1,0 +1,95 @@
+type: map
+mapping:
+  meta: # A set of meta informations.
+    required: yes
+    type: map
+    mapping:
+      version: # Specifies the version of this schema.
+        required: yes
+        type: str
+        pattern: "1.0"
+      desc: # Description of this circuit or box.
+        required: no
+        type: str
+
+  blocks: # List of blocks where each one defines a function.
+    required: yes
+    type: seq
+    sequence: # List of blocks.
+    - type: map
+      mapping:
+        name:
+          required: no
+          type: str
+        type:
+          required: yes
+          type: str
+        n_in:
+          required: no
+          type: int
+          range: {min: 0}
+        n_out:
+          required: yes
+          type: int
+          range: {min: 1}
+        id:
+          required: yes
+          type: str
+        value:
+          required: no
+          type: float
+        box_name:
+          required: no
+          type: str
+
+  conns: # List of connections where each one defines a conections between two blocks.
+    required: no
+    type: seq
+    sequence: # List of connections.
+    - type: map
+      mapping:
+        in_block_id:
+          required: yes
+          type: str
+        in_block_pin:
+          required: yes
+          type: int
+        out_block_id:
+          required: yes
+          type: str
+        out_block_pin:
+          required: no
+          type: int
+
+  box: # A set of meta informations about the defined box.
+    required: no
+    type: map
+    mapping:
+      n_in: # Specifies the number of input pins.
+        required: yes
+        type: int
+        range: {min: 1}
+      n_out: # Specifies the number of output pins.
+        required: yes
+        type: int
+        range: {min: 1}
+
+  bonds: # List of bonds where each one defines a bond between the pins of a box and interior blocks of this box.
+    required: no
+    type: seq
+    sequence: # List of bonds.
+    - type: map
+      mapping:
+        side:
+          required: yes
+          type: str
+        block_id:
+          required: yes
+          type: str
+        block_pin:
+          required: no
+          type: int
+        box_pin:
+          required: no
+          type: int
+

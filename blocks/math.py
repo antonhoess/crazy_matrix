@@ -6,8 +6,8 @@ from base.block import Block, BlockFixed, IBlock
 
 
 class AddN(Block):
-    def __init__(self, prev_blocks: Sequence[IBlock] = None):
-        Block.__init__(self, None, 1)
+    def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
+        Block.__init__(self, None, 1, name=name)
 
         if prev_blocks is not None:
             for b in prev_blocks:
@@ -38,8 +38,8 @@ class AddN(Block):
 
 
 class Sub2(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 2, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 2, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -61,8 +61,9 @@ class Sub2(BlockFixed):
 
 
 class MulN(Block):
-    def __init__(self, prev_blocks: Sequence[IBlock] = None):
-        Block.__init__(self, None, 1)
+    #self.desc xxx
+    def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
+        Block.__init__(self, None, 1, name=name)
 
         if prev_blocks is not None:
             for b in prev_blocks:
@@ -93,8 +94,8 @@ class MulN(Block):
 
 
 class Div2(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 2, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 2, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -116,8 +117,8 @@ class Div2(BlockFixed):
 
 
 class Abs(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -135,8 +136,8 @@ class Abs(BlockFixed):
 
 
 class Minus(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -154,8 +155,8 @@ class Minus(BlockFixed):
 
 
 class Inv(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -173,8 +174,8 @@ class Inv(BlockFixed):
 
 
 class Mod(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 2, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 2, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -196,8 +197,8 @@ class Mod(BlockFixed):
 
 
 class Exp(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -215,8 +216,8 @@ class Exp(BlockFixed):
 
 
 class Log(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 2, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 2, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -238,8 +239,8 @@ class Log(BlockFixed):
 
 
 class Ln(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -257,8 +258,8 @@ class Ln(BlockFixed):
 
 
 class Pow(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 2, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 2, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -280,8 +281,8 @@ class Pow(BlockFixed):
 
 
 class Sq(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -299,8 +300,8 @@ class Sq(BlockFixed):
 
 
 class Sqrt(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -318,8 +319,8 @@ class Sqrt(BlockFixed):
 
 
 class MinN(Block):
-    def __init__(self, prev_blocks: Sequence[IBlock] = None):
-        Block.__init__(self, None, 1)
+    def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
+        Block.__init__(self, None, 1, name=name)
 
         if prev_blocks is not None:
             for b in prev_blocks:
@@ -355,8 +356,8 @@ class MinN(Block):
 
 
 class MaxN(Block):
-    def __init__(self, prev_blocks: Sequence[IBlock] = None):
-        Block.__init__(self, None, 1)
+    def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
+        Block.__init__(self, None, 1, name=name)
 
         if prev_blocks is not None:
             for b in prev_blocks:
@@ -392,8 +393,8 @@ class MaxN(Block):
 
 
 class Sin(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
         self.__deg = deg
 
         if prev_block is not None:
@@ -403,10 +404,7 @@ class Sin(BlockFixed):
 
     def _calc_values(self):
         if self._conn_in[0].value is not None:
-            factor = 1.
-
-            if self.__deg:
-                factor = np.pi / 180.
+            factor = np.pi / 180 if self.__deg else 1.
 
             self._pin_value[0] = np.sin(self._conn_in[0].value * factor)
         else:
@@ -417,8 +415,8 @@ class Sin(BlockFixed):
 
 
 class Cos(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
         self.__deg = deg
 
         if prev_block is not None:
@@ -428,10 +426,7 @@ class Cos(BlockFixed):
 
     def _calc_values(self):
         if self._conn_in[0].value is not None:
-            factor = 1.
-
-            if self.__deg:
-                factor = np.pi / 180.
+            factor = np.pi / 180 if self.__deg else 1.
 
             self._pin_value[0] = np.cos(self._conn_in[0].value * factor)
         else:
@@ -442,8 +437,8 @@ class Cos(BlockFixed):
 
 
 class Tan(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
         self.__deg = deg
 
         if prev_block is not None:
@@ -453,12 +448,53 @@ class Tan(BlockFixed):
 
     def _calc_values(self):
         if self._conn_in[0].value is not None:
-            factor = 1.
-
-            if self.__deg:
-                factor = np.pi / 180.
+            factor = np.pi / 180 if self.__deg else 1.
 
             self._pin_value[0] = np.tan(self._conn_in[0].value * factor)
+        else:
+            self._pin_value[0] = None
+        # end if
+    # end def
+# end class
+
+
+class Atan(BlockFixed):
+    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
+        self.__deg = deg
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
+    # end def
+
+    def _calc_values(self):
+        if self._conn_in[0].value is not None:
+            factor = 180 / np.pi if self.__deg else 1.
+
+            self._pin_value[0] = np.arctan(self._conn_in[0].value) * factor
+        else:
+            self._pin_value[0] = None
+        # end if
+    # end def
+# end class
+
+
+class Atan2(BlockFixed):
+    def __init__(self, prev_block: Optional[IBlock] = None, deg: bool = True, name: Optional[str] = None):
+        BlockFixed.__init__(self, 2, 1, name=name)
+        self.__deg = deg
+
+        if prev_block is not None:
+            self.conn_to_prev_block(prev_block)
+        # end if
+    # end def
+
+    def _calc_values(self):
+        if self._conn_in[0].value is not None and self._conn_in[1].value is not None:
+            factor = 180 / np.pi if self.__deg else 1.
+
+            self._pin_value[0] = np.arctan2(self._conn_in[1].value, self._conn_in[0].value) * factor
         else:
             self._pin_value[0] = None
         # end if

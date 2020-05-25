@@ -20,12 +20,13 @@ if else etc. blocks einfügen?
 # XXX Normalisierungen ganz am ende, aber auch zwischendrin. dazu müssen werte gesamt betrachtet werden - wie soll das gehen?
 # anstatt die pixel einzeln zu berechnen, könnte man versuchen, alles zu vektorisieren mit numpy - das dürfte eine erhebliche Beschleunigung des Programmes zur Folge haben.
 
-# Die Pins einer Box müssen beschrieben werden und vllt. auch eien allgemein beschreivung ddazu?
 # Checken, ob und wo und wie das einführen von Namen für (ja für welche elemente alles? block, blackbox, conn, etc.?) sinnvoll ist für das debugging und debugging ausgaben und auch für den user, z.b. namen für einzelne blocks, um sie wiederzuerkennen.
 
 # Viele prüfungen einbauen, insb. beim connecten mit den indizes, deren ranges und ob der wert None ist, der als param übergeben wird und/oder ob intern der wert None ist, d.h. die anzahl an pins ist nicht fix.. mal separatm die logik übersichtlich notieren
 # XXX Auch eine Funktion machen zum prüfen, ob alle pins belegt sind, auch ovm drawer, damit sichergestellt ist, dass er überhaupt funktionieren kann
 # bei checks auf vollständige verbindungen beachten, dass z.b. bei einer repeatbox ein pin reingeht, aber nicht weiter verwendet wird (nur vond er repeatbox selbst als anzahl an Wiederholungen)
+verschiedene schema files für die 2-3 unterschiedlichen file typen? oder nur eines und dafür noch einen cross_check einbauen, was mit ohnehin prüfungen erlaubt, die ich so gar nciht mit dem schema abbilden kann
+In block_manager.cross_check() alle prüfungen rein, also ob ein circuit connected ist zum drawer, etc. pp?
 
 # BlockFactory.inst(): # XXX und hier nicht direkt über filenamen gehen, sondern über einen eindeutigen namen, der in den filenamen umgesetzt iwrd oder auch in einer internen liste mit verfügbaren modulen verwaltet wird? ersteres scheint einfcah erzu sein
             # XXX ConnTemplate.fromxxx() einfügen, dem direkt die objekte und nicht die id-strings übergeben werden. dadurch könnte ich z.B. in einem Fall wie folgt
@@ -33,7 +34,6 @@ if else etc. blocks einfügen?
             # XXX -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, 0)) -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, None))
                save blocks in a configurable folder
 
-# Daten in .yaml speichern? hierbei evtl. zwei separate felder verwenden für value (bei Const) und id/name bei BlackBox.
 
 funktionen
 ----------
@@ -51,10 +51,10 @@ funktionen
 beim hinzufügen von bonds in einer repeatbox muss auf die n_out des input layer geprüft werden und nicht auf n_in der repeatbox -> prüfen und umsetzen
 
 als näcshtes einen test mit einer repeat box machen, in der zahlen immer verdoppelt werden aber wenn ein bestimmter wert überschritten wrid, dieser am ende ausgegeben wird. also 5 * 2 * 2 * ... * 2 und als limit 20 angeben.
-
-einen neuen ordner mit blocks mit zufallsvariablen machen
+-> und dann endlich das mandelbrot machen
 
 anstatt auf einmal zu zeichnen, das zeichnen in einen thread auslagern, der (parametrisiert) gröber rastert (jedoch mit gleichen x und y werten) und wie bei gif nach und nach erst genauer wird - eine art preview, die schnelelr erahnen kässt, wohin die reise geht
+
 
 
 # Infos

@@ -18,7 +18,7 @@ class BondTemplate:
     # end def
 
     def __str__(self):
-        return f"BondTemplate: '{self.__block_id[:8]}:{self.__block_pin}' <=> '{self.__side}:{self.__box_pin}'"
+        return f"BondTemplate: '{self.__block_id}:{self.__block_pin}' <=> '{self.__side}:{self.__box_pin}'"
     # end def
 
     @staticmethod

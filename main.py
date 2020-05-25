@@ -24,10 +24,13 @@ def main(_argv: List[str]):
     p = c.point
     d = c.drawer
 
-    bm = BlockManager(base_dir="user_blocks")
+    bm = BlockManager(base_dir="user_blocks", schema_filename="core/box_data_schema_v1.0.yaml")
     bm.scan_dir()
 
-    test = 25
+    # test 26 creates all predefined user-blocks anew
+    test = 28  # 17 (circuit), 19 (black box), 25 (repeat box)
+
+    draw = True
 
     if test == 0:
         pi = Const(4.27)
@@ -409,7 +412,7 @@ def main(_argv: List[str]):
 
     elif test == 17:
         # Store and load a complete circuit - this example cannot use the global circuit, since it instantiates its own
-        out_filename = "test01.cmc"
+        out_filename = "test17"
         idg: IdGenerator = IdGenerator()
 
         cf: CircuitFactory = CircuitFactory()
@@ -425,12 +428,11 @@ def main(_argv: List[str]):
         cf.add_conn(ConnTemplate("0", 1, add.id, None))
         cf.add_conn(ConnTemplate(add.id, 0, "1", 0))
 
-        cf.store(out_filename)
-
         # Check, if storing and loading really works
         if True:
-            cf: CircuitFactory = CircuitFactory()
-            cf.load(out_filename)
+            bm.store(cf, out_filename)
+            bm.scan_dir()
+            cf = bm.load(out_filename)
         # end if
 
         c = cf.inst()
@@ -461,7 +463,7 @@ def main(_argv: List[str]):
 
     elif test == 19:
         # Defines, stores and loads a black box
-        out_filename = "test01"  # cmb = crazy matrix (black) box
+        out_filename = "test19"
         idg: IdGenerator = IdGenerator()
 
         btf: BlockTemplateFactory = BlockTemplateFactory(idg)
@@ -482,6 +484,7 @@ def main(_argv: List[str]):
 
         if True:
             bm.store(my_func, out_filename)
+            bm.scan_dir()
             my_func: BlackBoxFactory = bm.load(out_filename)
         # end if
 
@@ -764,7 +767,7 @@ def main(_argv: List[str]):
         fn_normal = "normal.cmb"
         fn_normal_dist = "normal_dist.cmb"
 
-        store_and_load = True
+        store_and_load = False#True
         if not store_and_load:
             idg: IdGenerator = IdGenerator()
 
@@ -826,8 +829,8 @@ def main(_argv: List[str]):
             btf: BlockTemplateFactory = BlockTemplateFactory(idg)
             normal_dist_func = BlackBoxFactory()
 
-            dist = normal_dist_func.add_block(btf.get_block_template(BlockType.BOX, "dist.cmb"))
-            normal = normal_dist_func.add_block(btf.get_block_template(BlockType.BOX, "normal.cmb"))
+            dist = normal_dist_func.add_block(btf.get_block_template(BlockType.BOX, box_name="dist"))
+            normal = normal_dist_func.add_block(btf.get_block_template(BlockType.BOX, box_name="normal"))
 
             # Interconnect the blocks of the box
             normal_dist_func.add_conn(ConnTemplate(dist.id, 0, normal.id, 0))
@@ -935,15 +938,15 @@ def main(_argv: List[str]):
 
         # --
 
-        test = 1  # Select experiment
+        subtest = 0  # Select experiment
 
         scale = 5.
         bb_mat_rot = mat_rot.inst("rotation_matrix")
 
-        if test == 0:
-            fn_dist = "dist.cmb"  # From previous step
-            dist_func: BlackBoxFactory = BlackBoxFactory()
-            dist_func.load(fn_dist)
+        if subtest == 0:
+            fn_dist = "dist"  # From previous step
+            bm.scan_dir()
+            dist_func = bm.load(fn_dist)
             bb_dist = dist_func.inst("dist_func")
 
             bb_dist.conn_to_prev_block(p, 0, 0)
@@ -997,19 +1000,278 @@ def main(_argv: List[str]):
 
         if store_and_load:
             bm.store(square_n_times, fn_square_n_times, overwrite=True)
+            bm.scan_dir()
             square_n_times = bm.load(fn_square_n_times)
         # end if
 
         # --
-        square_n_times_func = square_n_times.inst("square_n_times")
-        square_n_times_func.conn_to_prev_block(p, 0, 0)
-        square_n_times_func.conn_to_prev_block(Const(3), 0, 1)
+        if square_n_times is not None:
+            square_n_times_func = square_n_times.inst("square_n_times")
+            square_n_times_func.conn_to_prev_block(p, 0, 0)
+            square_n_times_func.conn_to_prev_block(Const(3), 0, 1)
 
-        d.conn_to_prev_block(square_n_times_func, 0, 0)
+            d.conn_to_prev_block(square_n_times_func, 0, 0)
+        else:
+            draw = False
+        # end if
+
+    elif test == 26:
+        draw = False
+
+        # Create and store multiple blocks
+        def create_cart2pol():
+            name = "cart2pol"
+
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            func = BlackBoxFactory()
+            func.add_desc("Transforms cartesian coordinates [degree] to polar coordinates.\n"
+                          "\n"
+                          "IN pins:\n"
+                          "* [0] X-coordinate.\n"
+                          "* [1] XY-coordinate.\n"
+                          "\n"
+                          "OUT pins:\n"
+                          "* [0] Radius.\n"
+                          "* [1] Theta (angle) [degree].")
+
+            x_sq = func.add_block(btf.get_block_template(BlockType.MATH_SQ, name="x_sq"))
+            y_sq = func.add_block(btf.get_block_template(BlockType.MATH_SQ, name="y_sq"))
+            sum_xy_sq = func.add_block(btf.get_block_template(BlockType.MATH_ADD, name="sum_xy_sq"))
+            r = func.add_block(btf.get_block_template(BlockType.MATH_SQRT, name="r"))
+
+            theta = func.add_block(btf.get_block_template(BlockType.MATH_ATAN2, name="theta"))
+
+            # Interconnect the blocks of the box
+            func.add_conn(ConnTemplate(x_sq.id, 0, sum_xy_sq.id, None))
+            func.add_conn(ConnTemplate(y_sq.id, 0, sum_xy_sq.id, None))
+            func.add_conn(ConnTemplate(sum_xy_sq.id, 0, r.id, 0))
+
+            # Bond the block of the box to the box pins
+            func.add_bond(BondTemplate(BoxSide.IN, x_sq.id, 0, 0))
+            func.add_bond(BondTemplate(BoxSide.IN, y_sq.id, 0, 1))
+            func.add_bond(BondTemplate(BoxSide.OUT, r.id, 0, 0))
+
+            func.add_bond(BondTemplate(BoxSide.IN, theta.id, 1, 0))
+            func.add_bond(BondTemplate(BoxSide.IN, theta.id, 0, 1))
+            func.add_bond(BondTemplate(BoxSide.OUT, theta.id, 0, 1))
+
+            bm.store(func, name, overwrite=True)
+        # end def
+
+        def create_dist_euclidean_scaled():
+            name = "dist_euclidean_scaled"
+
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            func = BlackBoxFactory()
+            func.add_desc("Calculates the euclidean distance between two points, scaled by a factor.\n"
+                          "\n"
+                          "IN pins:\n"
+                          "* [0] X-coordinate of point A.\n"
+                          "* [1] Y-coordinate of point A.\n"
+                          "* [2] X-coordinate of point B.\n"
+                          "* [3] Y-coordinate of point B.\n"
+                          "* [4] Scaling factor.\n"
+                          "\n"
+                          "OUT pins:\n"
+                          "* [0] Distance.\n")
+
+            diff_x = func.add_block(btf.get_block_template(BlockType.MATH_SUB, name="diff_x"))
+            diff_y = func.add_block(btf.get_block_template(BlockType.MATH_SUB, name="diff_y"))
+            diff_x_sq = func.add_block(btf.get_block_template(BlockType.MATH_SQ, name="diff_x_sq"))
+            diff_y_sq = func.add_block(btf.get_block_template(BlockType.MATH_SQ, name="diff_y_sq"))
+            add_xy_sq = func.add_block(btf.get_block_template(BlockType.MATH_ADD, name="add_xy_sq"))
+            dist = func.add_block(btf.get_block_template(BlockType.MATH_SQRT, name="dist"))
+            dist_rescaled = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="dist_rescaled"))
+
+            # Interconnect the blocks of the box
+            func.add_conn(ConnTemplate(diff_x.id, 0, diff_x_sq.id, 0))
+            func.add_conn(ConnTemplate(diff_y.id, 0, diff_y_sq.id, 0))
+            func.add_conn(ConnTemplate(diff_x_sq.id, 0, add_xy_sq.id, None))
+            func.add_conn(ConnTemplate(diff_y_sq.id, 0, add_xy_sq.id, None))
+            func.add_conn(ConnTemplate(add_xy_sq.id, 0, dist.id, 0))
+            func.add_conn(ConnTemplate(dist.id, 0, dist_rescaled.id, None))
+
+            # Bond the block of the box to the box pins
+            func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 0, 0))
+            func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 0, 1))
+            func.add_bond(BondTemplate(BoxSide.IN, diff_x.id, 1, 2))
+            func.add_bond(BondTemplate(BoxSide.IN, diff_y.id, 1, 3))
+            func.add_bond(BondTemplate(BoxSide.IN, dist_rescaled.id, None, 4))
+            func.add_bond(BondTemplate(BoxSide.OUT, dist_rescaled.id, 0, 0))
+
+            bm.store(func, name, overwrite=True)
+        # end def
+
+        # normal distribution
+        def create_normal_standard_pdf():
+            name = "normal_standard_pdf"
+
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            func = BlackBoxFactory()
+            func.add_desc("Calculates (normalized) the standard normal distribution pdf of the given value x.\n"
+                          "\n"
+                          "IN pin:\n"
+                          "* [0] Value x.\n"
+                          "\n"
+                          "OUT pin:\n"
+                          "* [0] PDF value at position x.")
+
+            norm_const_2 = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 2., name="norm_const_2"))
+            norm_const_pi = func.add_block(btf.get_block_template(BlockType.VAL_CONST_PI, name="norm_const_pi"))
+            norm = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="norm"))
+            norm_inv = func.add_block(btf.get_block_template(BlockType.MATH_INV, name="norm_inv"))
+
+            exp_term_fac = func.add_block(btf.get_block_template(BlockType.VAL_CONST, -.5, name="exp_term_fac"))
+            exp_term_x_sq = func.add_block(btf.get_block_template(BlockType.MATH_SQ, name="exp_term_x_sq"))
+            exp_term = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="exp_term"))
+            exp = func.add_block(btf.get_block_template(BlockType.MATH_EXP, name="exp"))
+
+            normal = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="normal"))
+
+            # Interconnect the blocks of the box
+            func.add_conn(ConnTemplate(norm_const_2.id, 0, norm.id, None))
+            func.add_conn(ConnTemplate(norm_const_pi.id, 0, norm.id, None))
+            func.add_conn(ConnTemplate(norm.id, 0, norm_inv.id, 0))
+
+            func.add_conn(ConnTemplate(exp_term_fac.id, 0, exp_term.id, None))
+            func.add_conn(ConnTemplate(exp_term_x_sq.id, 0, exp_term.id, None))
+            func.add_conn(ConnTemplate(exp_term.id, 0, exp.id, 0))
+
+            func.add_conn(ConnTemplate(norm_inv.id, 0, normal.id, None))
+            func.add_conn(ConnTemplate(exp.id, 0, normal.id, None))
+
+            # Bond the block of the box to the box pins
+            func.add_bond(BondTemplate(BoxSide.IN, exp_term_x_sq.id, 0, 0))
+            func.add_bond(BondTemplate(BoxSide.OUT, exp.id, 0, 0))
+
+            bm.store(func, name, overwrite=True)
+        # end def
+
+        # Rotation matrix
+        def create_mat_rot():
+            name = "mat_rot"
+
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            func = BlackBoxFactory()
+            func.add_desc("Performs a matrix multiplication of this rotation matrix (R[theta]) with a given vector (x) and the rotation angle theta [degree]: R×x.\n"
+                          "\n"
+                          "IN pins:\n"
+                          "* [0] X-coordinate of point.\n"
+                          "* [1] Y-coordinate of point.\n"
+                          "* [2] Angle theta for the rotation matrix R.\n"
+                          "\n"
+                          "OUT pins:\n"
+                          "* [0] X-coordinate of the rotated point.\n"
+                          "* [1] Y-coordinate of the rotated point.")
+
+            mul_11 = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="mul_11"))
+            mul_12 = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="mul_12"))
+            mul_21 = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="mul_21"))
+            mul_22 = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="mul_22"))
+
+            cos_11 = func.add_block(btf.get_block_template(BlockType.MATH_COS, name="cos_11"))
+            sin_12 = func.add_block(btf.get_block_template(BlockType.MATH_SIN, name="sin_12"))
+            sin_21 = func.add_block(btf.get_block_template(BlockType.MATH_SIN, name="sin_21"))
+            cos_22 = func.add_block(btf.get_block_template(BlockType.MATH_COS, name="cos_22"))
+
+            sub_11_12 = func.add_block(btf.get_block_template(BlockType.MATH_SUB, name="sub_11_12"))
+            add_21_22 = func.add_block(btf.get_block_template(BlockType.MATH_ADD, name="add_21_22"))
+
+            # Interconnect the blocks of the box
+            func.add_conn(ConnTemplate(cos_11.id, 0, mul_11.id, None))
+            func.add_conn(ConnTemplate(sin_12.id, 0, mul_12.id, None))
+            func.add_conn(ConnTemplate(sin_21.id, 0, mul_21.id, None))
+            func.add_conn(ConnTemplate(cos_22.id, 0, mul_22.id, None))
+
+            func.add_conn(ConnTemplate(mul_11.id, 0, sub_11_12.id, 0))
+            func.add_conn(ConnTemplate(mul_12.id, 0, sub_11_12.id, 1))
+
+            func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, None))
+            func.add_conn(ConnTemplate(mul_22.id, 0, add_21_22.id, None))
+
+            # Bond the block of the box to the box pins
+            func.add_bond(BondTemplate(BoxSide.IN, mul_11.id, None, 0))
+            func.add_bond(BondTemplate(BoxSide.IN, mul_21.id, None, 0))
+            func.add_bond(BondTemplate(BoxSide.IN, mul_12.id, None, 1))
+            func.add_bond(BondTemplate(BoxSide.IN, mul_22.id, None, 1))
+            func.add_bond(BondTemplate(BoxSide.IN, cos_11.id, 0, 2))
+            func.add_bond(BondTemplate(BoxSide.IN, sin_12.id, 0, 2))
+            func.add_bond(BondTemplate(BoxSide.IN, sin_21.id, 0, 2))
+            func.add_bond(BondTemplate(BoxSide.IN, cos_22.id, 0, 2))
+
+            func.add_bond(BondTemplate(BoxSide.OUT, sub_11_12.id, 0, 0))
+            func.add_bond(BondTemplate(BoxSide.OUT, add_21_22.id, 0, 1))
+
+            bm.store(func, name, overwrite=True)
+        # end def
+
+        create_cart2pol()
+        create_dist_euclidean_scaled()
+        create_normal_standard_pdf()
+        create_mat_rot()
+
+    elif test == 27:
+        # Test cart2pol box
+        bm.scan_dir()
+        cart2pol = bm.load("cart2pol")
+
+        if cart2pol is not None:
+            cart2pol_func = cart2pol.inst("cart2pol1")
+            cart2pol_func.conn_to_prev_block(p, 0, 0)
+            cart2pol_func.conn_to_prev_block(p, 1, 1)
+            mul = MulN()
+            mul.conn_to_prev_block(cart2pol_func, 0, None)
+            mul.conn_to_prev_block(cart2pol_func, 1, None)
+
+            d.conn_to_prev_block(mul, 0, 0)
+        else:
+            draw = False
+        # end if
+
+    elif test == 28:
+        # Test normal_standard_pdf box
+        bm.scan_dir()
+        normal_standard_pdf = bm.load("normal_standard_pdf")
+
+        if normal_standard_pdf is not None:
+            normal_standard_pdf_x = normal_standard_pdf.inst(name="normal_standard_pdf_x")
+            normal_standard_pdf_y = normal_standard_pdf.inst(name="normal_standard_pdf_y")
+
+            scale = Const(.01)
+            p_x_scaled = MulN()
+            p_x_scaled.conn_to_prev_block(scale, 0, None)
+            p_x_scaled.conn_to_prev_block(p, 0, None)
+
+            p_y_scaled = MulN()
+            p_y_scaled.conn_to_prev_block(scale, 0, None)
+            p_y_scaled.conn_to_prev_block(p, 1, None)
+
+            normal_standard_pdf_x.conn_to_prev_block(p_x_scaled, 0, 0)
+            normal_standard_pdf_y.conn_to_prev_block(p_y_scaled, 0, 0)
+
+            pdf = MulN()
+            pdf.conn_to_prev_block(normal_standard_pdf_x, 0, None)
+            pdf.conn_to_prev_block(normal_standard_pdf_y, 0, None)
+
+            d.conn_to_prev_block(pdf, 0, 0)
+        else:
+            draw = False
+        # end if
+
     # end if
 
-    cm = CrazyMatrix(circuit=c, width=400, height=200)
-    cm.plot()
+    if draw:
+        cm = CrazyMatrix(circuit=c, width=400, height=200)
+        cm.plot()
+    # end if
 # end def
 
 

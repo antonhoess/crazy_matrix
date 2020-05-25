@@ -1,0 +1,51 @@
+meta:
+  version: '1.0'
+  desc: |-
+    None
+box:
+  n_in: 1
+  n_out: 1
+blocks:
+- name: exp_term_fac
+  type: const
+  n_in: 0
+  n_out: 1
+  id: 9a70
+  value: -0.5
+- name: exp_term_x_sq
+  type: sq
+  n_in: 1
+  n_out: 1
+  id: d6ce
+- name: exp_term
+  type: mul
+  n_in: null
+  n_out: 1
+  id: 15b0
+- name: normal
+  type: exp
+  n_in: 1
+  n_out: 1
+  id: d880
+conns:
+- in_block_id: 9a70
+  in_block_pin: 0
+  out_block_id: 15b0
+  out_block_pin: null
+- in_block_id: d6ce
+  in_block_pin: 0
+  out_block_id: 15b0
+  out_block_pin: null
+- in_block_id: 15b0
+  in_block_pin: 0
+  out_block_id: d880
+  out_block_pin: 0
+bonds:
+- side: in
+  block_id: d6ce
+  block_pin: 0
+  box_pin: 0
+- side: out
+  block_id: d880
+  block_pin: 0
+  box_pin: 0

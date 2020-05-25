@@ -11,7 +11,7 @@ class ConnTemplate:
     # end def
 
     def __str__(self):
-        return f"ConnTemplate: '{self.__in_block_id[:8]}:{self.__in_block_pin}' <=> '{self.__out_block_id[:8]}:{self.__out_block_pin}'"
+        return f"ConnTemplate: '{self.__in_block_id}:{self.__in_block_pin}' <=> '{self.__out_block_id}:{self.__out_block_pin}'"
     # end def
 
     def __repr__(self):

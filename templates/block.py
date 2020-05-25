@@ -15,7 +15,7 @@ class IdGenerator:
 
     def new_id(self) -> str:
         while True:
-            new_id = uuid.uuid4().hex[:8]
+            new_id = uuid.uuid4().hex[:4]
 
             # Try again to find a free uuid, if this one is already in use (which is very unlikely)
             if new_id not in self.__ids:
@@ -42,6 +42,7 @@ class BlockType(Enum):
     MATH_SUB = "sub"
     MATH_MUL = "mul"
     MATH_DIV = "div"
+    MATH_INV = "inv"
     MATH_ABS = "abs"
     MATH_MINUS = "minus"
     MATH_MOD = "mod"
@@ -56,6 +57,8 @@ class BlockType(Enum):
     MATH_SIN = "sin"
     MATH_COS = "cos"
     MATH_TAN = "tan"
+    MATH_ATAN = "atan"
+    MATH_ATAN2 = "atan2"
 # end class
 
 
@@ -78,16 +81,18 @@ class BlockPinCountTemplate:
 
 
 class BlockTemplate:
-    def __init__(self, block_type: BlockType, n_in: Optional[int], n_out: int, item_id: str, value: Optional[Union[float, str]] = None):
+    def __init__(self, block_type: BlockType, n_in: Optional[int], n_out: int, item_id: str, value: Optional[float] = None, box_name: Optional[str] = None, name: Optional[str] = None):
         self.__type: BlockType = block_type
         self.__n_in: Optional[int] = n_in
         self.__n_out: int = n_out
         self.__id: str = item_id
-        self.__value: Optional[Union[float, str]] = value
+        self.__value: Optional[float] = value
+        self.__box_name: Optional[str] = box_name
+        self.__name = name
     # end def
 
     def __str__(self):
-        return f"BlockTemplate of type: '{self.__type.value}', n_in: {self.__n_in}, n_out: {self.__n_out}, id: {self.__id[:8]}"
+        return f"BlockTemplate of type: '{self.__type.value}', n_in: {self.__n_in}, n_out: {self.__n_out}, id: {self.__id}"
     # end def
 
     def __repr__(self):
@@ -105,7 +110,7 @@ class BlockTemplate:
     # end def
 
     @property
-    def n_out(self) -> Optional[int]:
+    def n_out(self) -> int:
         return self.__n_out
     # end def
 
@@ -117,6 +122,16 @@ class BlockTemplate:
     @property
     def value(self) -> Optional[float]:
         return self.__value
+    # end def
+
+    @property
+    def box_name(self) -> Optional[str]:
+        return self.__box_name
+    # end def
+
+    @property
+    def name(self) -> Optional[str]:
+        return self.__name
     # end def
 # end class
 
@@ -156,6 +171,9 @@ class BlockTemplateFactory:
 
             elif t is BlockType.MATH_DIV:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(2, 1))
+
+            elif t is BlockType.MATH_INV:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
 
             elif t is BlockType.MATH_ABS:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
@@ -199,26 +217,31 @@ class BlockTemplateFactory:
             elif t is BlockType.MATH_TAN:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
 
+            elif t is BlockType.MATH_ATAN:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
+
+            elif t is BlockType.MATH_ATAN2:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(2, 1))
+
             else:
                 raise NotImplementedError(f"Enum entry {t} not handled!")
             # end if
         # end for
     # end def
 
-    # XXX anstatt value doppelt uzu belegen, eher mit kwargs arbeiten? oder irgendwie die wertübergabe erzwingen?
-    def get_block_template(self, block_type: BlockType, value: Optional[Union[float, str]] = None) -> BlockTemplate:
+    def get_block_template(self, block_type: BlockType, value: Optional[float] = None, box_name: Optional[str] = None, name: Optional[str] = None) -> BlockTemplate:
         for t, _type in enumerate(BlockType):
             if _type is block_type:
-                if not isinstance(value, str):
+                if _type is not BlockType.BOX:
                     block_pin_count_template: BlockPinCountTemplate = self.__block_pin_count_templates[t]
                 else:
                     from templates.box import BlackBoxFactory  # Due to circular dependency
 
-                    bf: BlackBoxFactory = BlackBoxFactory().load(value)
+                    bf: BlackBoxFactory = BlackBoxFactory().load(box_name)
                     block_pin_count_template: BlockPinCountTemplate = BlockPinCountTemplate(bf.n_in, bf.n_out)
                 # end if
 
-                return BlockTemplate(_type, block_pin_count_template.n_in, block_pin_count_template.n_out, self.__id_gen.new_id(), value)
+                return BlockTemplate(_type, block_pin_count_template.n_in, block_pin_count_template.n_out, self.__id_gen.new_id(), value, box_name, name=name)
             # end if
         # end for
 
@@ -262,6 +285,9 @@ class BlockFactory:
         elif block_template.type is BlockType.MATH_DIV:
             return Div2()
 
+        elif block_template.type is BlockType.MATH_INV:
+            return Inv()
+
         elif block_template.type is BlockType.MATH_ABS:
             return Abs()
 
@@ -303,6 +329,12 @@ class BlockFactory:
 
         elif block_template.type is BlockType.MATH_TAN:
             return Tan()
+
+        elif block_template.type is BlockType.MATH_ATAN:
+            return Atan()
+
+        elif block_template.type is BlockType.MATH_ATAN2:
+            return Atan2()
 
         else:
             return None

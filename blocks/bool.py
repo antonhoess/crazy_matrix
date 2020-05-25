@@ -4,8 +4,8 @@ from base.block import BlockFixed, Block, IBlock
 
 
 class AndN(Block):
-    def __init__(self, prev_blocks: Sequence[IBlock] = None):
-        Block.__init__(self, None, 1)
+    def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
+        Block.__init__(self, None, 1, name=name)
 
         if prev_blocks is not None:
             for b in prev_blocks:
@@ -36,8 +36,8 @@ class AndN(Block):
 
 
 class OrN(Block):
-    def __init__(self, prev_blocks: Sequence[IBlock] = None):
-        Block.__init__(self, None, 1)
+    def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
+        Block.__init__(self, None, 1, name=name)
 
         if prev_blocks is not None:
             for b in prev_blocks:
@@ -68,8 +68,8 @@ class OrN(Block):
 
 
 class Not(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -87,8 +87,8 @@ class Not(BlockFixed):
 
 
 class Gt(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 2, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 2, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -110,8 +110,8 @@ class Gt(BlockFixed):
 
 
 class Lt(BlockFixed):
-    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None):
-        BlockFixed.__init__(self, 2, 1)
+    def __init__(self, prev_block: Optional[IBlock] = None, prev_block2: Optional[IBlock] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 2, 1, name=name)
 
         if prev_block is not None:
             self.conn_to_prev_block(prev_block)
@@ -133,8 +133,8 @@ class Lt(BlockFixed):
 
 
 class EqN(Block):
-    def __init__(self, prev_blocks: Sequence[IBlock] = None):
-        Block.__init__(self, None, 1)
+    def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
+        Block.__init__(self, None, 1, name=name)
 
         if prev_blocks is not None:
             for b in prev_blocks:

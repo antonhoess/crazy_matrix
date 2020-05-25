@@ -6,8 +6,8 @@ import numpy as np
 
 
 class Const(BlockFixed):
-    def __init__(self, value: float):
-        BlockFixed.__init__(self, 0, 1)
+    def __init__(self, value: float, name: Optional[str] = None):
+        BlockFixed.__init__(self, 0, 1, name=name)
         self._pin_value[0] = value
     # end def
 
@@ -22,22 +22,22 @@ class Const(BlockFixed):
 
 
 class ConstPi(Const):
-    def __init__(self):
-        Const.__init__(self, float(np.pi))
+    def __init__(self, name: Optional[str] = None):
+        Const.__init__(self, float(np.pi), name=name)
     # end def
 # end class
 
 
 class ConstE(Const):
-    def __init__(self):
-        Const.__init__(self, float(np.e))
+    def __init__(self, name: Optional[str] = None):
+        Const.__init__(self, float(np.e), name=name)
     # end def
 # end class
 
 
 class Variable(BlockFixed):
-    def __init__(self, value: Optional[float] = None):
-        BlockFixed.__init__(self, 1, 1)
+    def __init__(self, value: Optional[float] = None, name: Optional[str] = None):
+        BlockFixed.__init__(self, 1, 1, name=name)
         self._pin_value[0] = value
     # end def
 
