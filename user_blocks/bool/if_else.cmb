@@ -1,0 +1,79 @@
+meta:
+  version: '1.0'
+  desc: |
+    Returns either one or the other values, depending on a indicator value.
+
+    IN pins:
+    * [0] Indicator value. If value is exactly 1, it's interpreted as the condition is fulfilled.
+    * [1] IF-Value for output if condition is fulfilled.
+    * [2] ELSE-Value for output if condition is not fulfilled.
+
+    OUT pins:
+    * [0] Value from either IF or ELSE pin, depending on the indicator value.
+box:
+  n_in: 3
+  n_out: 1
+blocks:
+- name: not_1
+  type: not
+  n_in: 1
+  n_out: 1
+  id: b1f1
+- name: not_2
+  type: not
+  n_in: 1
+  n_out: 1
+  id: c0e7
+- name: mul_if
+  type: mul
+  n_in: null
+  n_out: 1
+  id: '1773'
+- name: mul_else
+  type: mul
+  n_in: null
+  n_out: 1
+  id: e5a9
+- name: mul_else
+  type: add
+  n_in: null
+  n_out: 1
+  id: 569e
+conns:
+- in_block_id: b1f1
+  in_block_pin: 0
+  out_block_id: c0e7
+  out_block_pin: 0
+- in_block_id: b1f1
+  in_block_pin: 0
+  out_block_id: e5a9
+  out_block_pin: null
+- in_block_id: c0e7
+  in_block_pin: 0
+  out_block_id: '1773'
+  out_block_pin: null
+- in_block_id: '1773'
+  in_block_pin: 0
+  out_block_id: 569e
+  out_block_pin: null
+- in_block_id: e5a9
+  in_block_pin: 0
+  out_block_id: 569e
+  out_block_pin: null
+bonds:
+- side: in
+  block_id: b1f1
+  block_pin: 0
+  box_pin: 0
+- side: in
+  block_id: '1773'
+  block_pin: null
+  box_pin: 1
+- side: in
+  block_id: e5a9
+  block_pin: null
+  box_pin: 2
+- side: out
+  block_id: 569e
+  block_pin: 0
+  box_pin: 0

@@ -1,0 +1,79 @@
+meta:
+  version: '1.0'
+  desc: |-
+    Transforms cartesian coordinates [degree] to polar coordinates.
+
+    IN pins:
+    * [0] X-coordinate.
+    * [1] XY-coordinate.
+
+    OUT pins:
+    * [0] Radius.
+    * [1] Theta (angle) [degree].
+box:
+  n_in: 2
+  n_out: 2
+blocks:
+- name: x_sq
+  type: sq
+  n_in: 1
+  n_out: 1
+  id: 8aa9
+- name: y_sq
+  type: sq
+  n_in: 1
+  n_out: 1
+  id: 0f69
+- name: sum_xy_sq
+  type: add
+  n_in: null
+  n_out: 1
+  id: 33c8
+- name: r
+  type: sqrt
+  n_in: 1
+  n_out: 1
+  id: c5f7
+- name: theta
+  type: atan2
+  n_in: 2
+  n_out: 1
+  id: 7f4d
+conns:
+- in_block_id: 8aa9
+  in_block_pin: 0
+  out_block_id: 33c8
+  out_block_pin: null
+- in_block_id: 0f69
+  in_block_pin: 0
+  out_block_id: 33c8
+  out_block_pin: null
+- in_block_id: 33c8
+  in_block_pin: 0
+  out_block_id: c5f7
+  out_block_pin: 0
+bonds:
+- side: in
+  block_id: 8aa9
+  block_pin: 0
+  box_pin: 0
+- side: in
+  block_id: 0f69
+  block_pin: 0
+  box_pin: 1
+- side: out
+  block_id: c5f7
+  block_pin: 0
+  box_pin: 0
+- side: in
+  block_id: 7f4d
+  block_pin: 1
+  box_pin: 0
+- side: in
+  block_id: 7f4d
+  block_pin: 0
+  box_pin: 1
+- side: out
+  block_id: 7f4d
+  block_pin: 0
+  box_pin: 1
