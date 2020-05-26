@@ -1,51 +1,103 @@
 meta:
   version: '1.0'
   desc: |-
-    None
+    Calculates (normalized) the standard normal distribution pdf of the given value x.
+
+    IN pin:
+    * [0] Value x.
+
+    OUT pin:
+    * [0] PDF value at position x.
 box:
   n_in: 1
   n_out: 1
 blocks:
+- name: norm_const_2
+  type: const
+  n_in: 0
+  n_out: 1
+  id: b233
+  value: 2.0
+- name: norm_const_pi
+  type: const_pi
+  n_in: 0
+  n_out: 1
+  id: bfa2
+- name: norm
+  type: mul
+  n_in: null
+  n_out: 1
+  id: '1558'
+- name: norm_inv
+  type: inv
+  n_in: 1
+  n_out: 1
+  id: 8a9c
 - name: exp_term_fac
   type: const
   n_in: 0
   n_out: 1
-  id: 9a70
+  id: 13f4
   value: -0.5
 - name: exp_term_x_sq
   type: sq
   n_in: 1
   n_out: 1
-  id: d6ce
+  id: 3d24
 - name: exp_term
   type: mul
   n_in: null
   n_out: 1
-  id: 15b0
-- name: normal
+  id: f473
+- name: exp
   type: exp
   n_in: 1
   n_out: 1
-  id: d880
+  id: 6dcc
+- name: normal
+  type: mul
+  n_in: null
+  n_out: 1
+  id: '3230'
 conns:
-- in_block_id: 9a70
+- in_block_id: b233
   in_block_pin: 0
-  out_block_id: 15b0
+  out_block_id: '1558'
   out_block_pin: null
-- in_block_id: d6ce
+- in_block_id: bfa2
   in_block_pin: 0
-  out_block_id: 15b0
+  out_block_id: '1558'
   out_block_pin: null
-- in_block_id: 15b0
+- in_block_id: '1558'
   in_block_pin: 0
-  out_block_id: d880
+  out_block_id: 8a9c
   out_block_pin: 0
+- in_block_id: 13f4
+  in_block_pin: 0
+  out_block_id: f473
+  out_block_pin: null
+- in_block_id: 3d24
+  in_block_pin: 0
+  out_block_id: f473
+  out_block_pin: null
+- in_block_id: f473
+  in_block_pin: 0
+  out_block_id: 6dcc
+  out_block_pin: 0
+- in_block_id: 8a9c
+  in_block_pin: 0
+  out_block_id: '3230'
+  out_block_pin: null
+- in_block_id: 6dcc
+  in_block_pin: 0
+  out_block_id: '3230'
+  out_block_pin: null
 bonds:
 - side: in
-  block_id: d6ce
+  block_id: 3d24
   block_pin: 0
   box_pin: 0
 - side: out
-  block_id: d880
+  block_id: 6dcc
   block_pin: 0
   box_pin: 0

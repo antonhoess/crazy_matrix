@@ -223,10 +223,22 @@ class BlockManager:
         # end if
     # end def
 
+    def get_filename_from_name(self, name: str) -> Optional[str]:
+        for entry in self.__block_entries:
+            if entry.name == name:
+                fn = f"{os.path.join(self.__base_dir, *entry.path_parts, entry.name)}.{entry.type.value}"
+                return fn
+            # end if
+        # end for
+
+        return None
+    # end def
+
     def load(self, name: str) -> Any:  # Don't specify a return type since we want to return values of different types
         from templates.box import BlackBoxFactory, RepeatBoxFactory
 
         box: Optional[Any] = None
+
         for entry in self.__block_entries:
             if entry.name == name:
                 file_okay = True
@@ -247,25 +259,24 @@ class BlockManager:
                 if file_okay:
                     if entry.type is BlockFileType.CIRCUIT:
                         box = CircuitFactory().load(fn)
-                        break
 
                     elif entry.type is BlockFileType.BLACK_BOX:
                         box = BlackBoxFactory().load(fn, name=name)
-                        break
 
                     elif entry.type is BlockFileType.REPEAT_BOX:
                         box = RepeatBoxFactory().load(fn, name=name)
-                        break
+                    # end if
+
+                    if not self.cross_check(box):
+                        box = None
                     # end if
                 # end if
+
+                break
             # end if
         # end for
 
-        if self.cross_check(box):
-            return box
-        else:
-            return None
-        # end if
+        return box
     # end def
 
     @staticmethod

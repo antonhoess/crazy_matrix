@@ -28,9 +28,12 @@ def main(_argv: List[str]):
     bm.scan_dir()
 
     # test 26 creates all predefined user-blocks anew
-    test = 28  # 17 (circuit), 19 (black box), 25 (repeat box)
+    test = 29  # 17 (circuit), 19 (black box), 25 (repeat box)
 
     draw = True
+
+    width = 400
+    height = 200
 
     if test == 0:
         pi = Const(4.27)
@@ -880,7 +883,7 @@ def main(_argv: List[str]):
         d.conn_to_prev_block(dist_total, 0, 0)
 
     elif test == 24:
-        # Added distance of three points using a black box consisting of two other black boxes
+        # Build a rotation matrix black box and multiply the current position with it.
         fn_mat_rot = "mat_rot.cmb"
 
         store_and_load = False
@@ -1213,10 +1216,88 @@ def main(_argv: List[str]):
             bm.store(func, name, overwrite=True)
         # end def
 
+        def create_if_else():
+            name = "if_else"
+
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            func = BlackBoxFactory()
+            func.add_desc("Returns either one or the other values, depending on a indicator value.\n"
+                          "\n"
+                          "IN pins:\n"
+                          "* [0] Indicator value. If value is exactly 1, it's interpreted as the condition is fulfilled.\n"
+                          "* [1] IF-Value for output if condition is fulfilled.\n"
+                          "* [2] ELSE-Value for output if condition is not fulfilled.\n"
+                          "\n"
+                          "OUT pins:\n"
+                          "* [0] Value from either IF or ELSE pin, depending on the indicator value.\n")
+
+            not_1 = func.add_block(btf.get_block_template(BlockType.BOOL_NOT, name="not_1"))
+            not_2 = func.add_block(btf.get_block_template(BlockType.BOOL_NOT, name="not_2"))
+            mul_if = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="mul_if"))
+            mul_else = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="mul_else"))
+            res = func.add_block(btf.get_block_template(BlockType.MATH_ADD, name="mul_else"))
+
+            # Interconnect the blocks of the box
+            func.add_conn(ConnTemplate(not_1.id, 0, not_2.id, 0))
+            func.add_conn(ConnTemplate(not_1.id, 0, mul_else.id, None))
+            func.add_conn(ConnTemplate(not_2.id, 0, mul_if.id, None))
+            func.add_conn(ConnTemplate(mul_if.id, 0, res.id, None))
+            func.add_conn(ConnTemplate(mul_else.id, 0, res.id, None))
+
+            # Bond the block of the box to the box pins
+            func.add_bond(BondTemplate(BoxSide.IN, not_1.id, 0, 0))
+            func.add_bond(BondTemplate(BoxSide.IN, mul_if.id, None, 1))
+            func.add_bond(BondTemplate(BoxSide.IN, mul_else.id, None, 2))
+            func.add_bond(BondTemplate(BoxSide.OUT, res.id, 0, 0))
+
+            bm.store(func, name, overwrite=True)
+        # end def
+        #
+        # def create_complex_abs():
+        #     name = "complex_abs"
+        #
+        #     idg: IdGenerator = IdGenerator()
+        #
+        #     btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+        #     func = BlackBoxFactory()
+        #     func.add_desc("Returns either one or the other values, depending on a indicator value.\n"
+        #                   "\n"
+        #                   "IN pins:\n"
+        #                   "* [0] Indicator value. If value is exactly 1, it's interpreted as the condition is fulfilled.\n"
+        #                   "* [1] IF-Value for output if condition is fulfilled.\n"
+        #                   "* [2] ELSE-Value for output if condition is not fulfilled.\n"
+        #                   "\n"
+        #                   "OUT pins:\n"
+        #                   "* [0] Value from either IF or ELSE pin, depending on the indicator value.\n")
+        #
+        #     not_1 = func.add_block(btf.get_block_template(BlockType.BOOL_NOT, name="not_1"))
+        #     not_2 = func.add_block(btf.get_block_template(BlockType.BOOL_NOT, name="not_1"))
+        #     mul_if = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="mul_if"))
+        #     mul_else = func.add_block(btf.get_block_template(BlockType.MATH_MUL, name="mul_else"))
+        #     res = func.add_block(btf.get_block_template(BlockType.MATH_ADD, name="mul_else"))
+        #
+        #     # Interconnect the blocks of the box
+        #     func.add_conn(ConnTemplate(not_1.id, 0, mul_else.id, None))
+        #     func.add_conn(ConnTemplate(not_2.id, 0, mul_if.id, None))
+        #     func.add_conn(ConnTemplate(mul_if.id, 0, res.id, None))
+        #     func.add_conn(ConnTemplate(mul_else.id, 0, res.id, None))
+        #
+        #     # Bond the block of the box to the box pins
+        #     func.add_bond(BondTemplate(BoxSide.IN, not_1.id, 0, 0))
+        #     func.add_bond(BondTemplate(BoxSide.IN, mul_if.id, None, 1))
+        #     func.add_bond(BondTemplate(BoxSide.IN, mul_else.id, None, 2))
+        #     func.add_bond(BondTemplate(BoxSide.OUT, res.id, 0, 0))
+        #
+        #     bm.store(func, name, overwrite=True)
+        # # end def
+
         create_cart2pol()
         create_dist_euclidean_scaled()
         create_normal_standard_pdf()
         create_mat_rot()
+        create_if_else()
 
     elif test == 27:
         # Test cart2pol box
@@ -1266,10 +1347,246 @@ def main(_argv: List[str]):
             draw = False
         # end if
 
+    elif test == 29:
+        def create_mandelbrot_inner():
+            name = "mandelbrot_inner"
+
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            func = RepeatBoxFactory()
+            func.add_desc("Does the inner loop of the mandelbrot calculation for a given point on the complex plane defined by c0.\n"
+                          "\n"
+                          "IN pins:\n"
+                          "* [0] c0: Real part of the input point on the complex plane.\n"
+                          "* [1] c0: Imaginary part of the input point on the complex plane.\n"
+                          "* [2] c: Real part of the continuously updated value within this box.\n"
+                          "* [3] c: Imaginary part of the continuously updated value within this box.\n"
+                          "* [4] i: Counter variable.\n"
+                          "* [5] res: Resulting mandelbrot-value for the given point.\n"
+                          "* [6] n_rep Number of repetitions.\n"
+                          "\n"
+                          "OUT pins:\n"
+                          "* [0] c0: See input. (Needed for repetition only).\n"
+                          "* [1] c0: See input. (Needed for repetition only).\n"
+                          "* [2] c: See input. (Needed for repetition only).\n"
+                          "* [3] c: See input. (Needed for repetition only).\n"
+                          "* [4] i: See input. (Needed for repetition only).\n"
+                          "* [5] res: See input. (Needed for repetition also).\n")
+
+            # c0
+            c0_real = func.add_block(btf.get_block_template(BlockType.VAL_VAR, name="c0_real"))
+            c0_imag = func.add_block(btf.get_block_template(BlockType.VAL_VAR, name="c0_imag"))
+
+            # CABS(c)
+            abs_helper_const_real = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 0., name="abs_helper_const_real"))
+            abs_helper_const_imag = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 0., name="abs_helper_const_imag"))
+            abs_helper_const_scale = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 1., name="abs_helper_const_scale"))
+
+            # -> Yes, abs(c) is just the same as the euclidean distance of a point to the origin
+            abs_c = func.add_block(btf.get_block_template(BlockType.BOX, box_name=bm.get_filename_from_name("dist_euclidean_scaled"), name="abs_c"))
+
+            # CABS(c) >= 2 - and its NOT-version
+            border_const = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 2., name="border_const"))
+
+            abs_c_gt_2 = func.add_block(btf.get_block_template(BlockType.BOOL_GT, name="abs_c_gt_2"))
+            abs_c_not_gt_2 = func.add_block(btf.get_block_template(BlockType.BOOL_NOT, name="abs_c_not_gt_2"))
+
+            # res == 0
+            res_eq_0_helper_const = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 0., name="res_eq_0_helper_const"))
+            res_eq_0 = func.add_block(btf.get_block_template(BlockType.BOOL_EQ, name="res_eq_0"))
+
+            # c = c * c + c0
+            c_sq = func.add_block(btf.get_block_template(BlockType.COMPLEX_MUL, name="c_sq"))
+            c_sq_plus_c0 = func.add_block(btf.get_block_template(BlockType.COMPLEX_ADD, name="c_sq_plus_c0"))
+
+            # res == 0 and CABS(c) >= 2
+            res_eq_0_and_abs_c_gt_2 = func.add_block(btf.get_block_template(BlockType.BOOL_AND, name="res_eq_0_and_abs_c_gt_2"))
+
+            # res == 0 and not CABS(c) >= 2
+            res_eq_0_and_abs_c_not_gt_2 = func.add_block(btf.get_block_template(BlockType.BOOL_AND, name="res_eq_0_and_abs_c_not_gt_2"))
+
+            # if res == 0 and not CABS(c) >= 2 then c = c * c + c0 [else c = c]
+            if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_real = func.add_block(btf.get_block_template(BlockType.BOX, box_name=bm.get_filename_from_name("if_else"), name="if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_real"))
+            if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_imag = func.add_block(btf.get_block_template(BlockType.BOX, box_name=bm.get_filename_from_name("if_else"), name="if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_imag"))
+
+            # if res == 0 and CABS(c) >= 2 then res = i [else res = res]
+            if_res_eq_0_and_abs_c_gt_2_then_i_else_res = func.add_block(btf.get_block_template(BlockType.BOX, box_name=bm.get_filename_from_name("if_else"), name="if_res_eq_0_and_abs_c_gt_2_then_i_else_res"))
+
+            # i = i + 1
+            i_plus_1_helper_const = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 1., name="i_plus_1_helper_const"))
+            i_plus_1 = func.add_block(btf.get_block_template(BlockType.MATH_ADD, name="i_plus_1"))
+
+            # Interconnect the blocks of the box
+            # abs(c)
+            func.add_conn(ConnTemplate(abs_helper_const_real.id, 0, abs_c.id, 2))
+            func.add_conn(ConnTemplate(abs_helper_const_imag.id, 0, abs_c.id, 3))
+            func.add_conn(ConnTemplate(abs_helper_const_scale.id, 0, abs_c.id, 4))
+
+            # CABS(c) >= 2 - and its NOT-version
+            func.add_conn(ConnTemplate(abs_c.id, 0, abs_c_gt_2.id, 0))
+            func.add_conn(ConnTemplate(border_const.id, 0, abs_c_gt_2.id, 1))
+
+            func.add_conn(ConnTemplate(abs_c_gt_2.id, 0, abs_c_not_gt_2.id, 0))
+
+            # res == 0
+            func.add_conn(ConnTemplate(res_eq_0_helper_const.id, 0, res_eq_0.id, None))
+
+            # c = c * c + c0
+            func.add_conn(ConnTemplate(c_sq.id, 0, c_sq_plus_c0.id, None))
+            func.add_conn(ConnTemplate(c_sq.id, 1, c_sq_plus_c0.id, None))
+            func.add_conn(ConnTemplate(c0_real.id, 0, c_sq_plus_c0.id, None))
+            func.add_conn(ConnTemplate(c0_imag.id, 0, c_sq_plus_c0.id, None))
+
+            # res == 0 and CABS(c) >= 2
+            func.add_conn(ConnTemplate(res_eq_0.id, 0, res_eq_0_and_abs_c_gt_2.id, None))
+            func.add_conn(ConnTemplate(abs_c_gt_2.id, 0, res_eq_0_and_abs_c_gt_2.id, None))
+
+            # res == 0 and not CABS(c) >= 2
+            func.add_conn(ConnTemplate(res_eq_0.id, 0, res_eq_0_and_abs_c_not_gt_2.id, None))
+            func.add_conn(ConnTemplate(abs_c_not_gt_2.id, 0, res_eq_0_and_abs_c_not_gt_2.id, None))
+
+            # if res == 0 and not CABS(c) >= 2 then c = c * c + c0 [else c = c]
+            func.add_conn(ConnTemplate(res_eq_0_and_abs_c_not_gt_2.id, 0, if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_real.id, 0))
+            func.add_conn(ConnTemplate(c_sq_plus_c0.id, 0, if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_real.id, 1))
+
+            func.add_conn(ConnTemplate(res_eq_0_and_abs_c_not_gt_2.id, 0, if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_imag.id, 0))
+            func.add_conn(ConnTemplate(c_sq_plus_c0.id, 1, if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_imag.id, 1))
+
+            # if res == 0 and CABS(c) >= 2 then res = i [else res = res]
+            func.add_conn(ConnTemplate(res_eq_0_and_abs_c_gt_2.id, 0, if_res_eq_0_and_abs_c_gt_2_then_i_else_res.id, 0))
+
+            # i = i + 1
+            func.add_conn(ConnTemplate(i_plus_1_helper_const.id, 0, i_plus_1.id, None))
+
+            # Bond the block of the box to the box pins
+            func.add_bond(BondTemplate(BoxSide.IN, c0_real.id, 0, 0))
+            func.add_bond(BondTemplate(BoxSide.IN, c0_imag.id, 0, 1))
+            func.add_bond(BondTemplate(BoxSide.IN, abs_c.id, 0, 2))
+            func.add_bond(BondTemplate(BoxSide.IN, abs_c.id, 1, 3))
+            func.add_bond(BondTemplate(BoxSide.IN, if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_real.id, 2, 2))
+            func.add_bond(BondTemplate(BoxSide.IN, if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_imag.id, 2, 3))
+            func.add_bond(BondTemplate(BoxSide.IN, c_sq.id, None, 2))
+            func.add_bond(BondTemplate(BoxSide.IN, c_sq.id, None, 3))
+            func.add_bond(BondTemplate(BoxSide.IN, c_sq.id, None, 2))
+            func.add_bond(BondTemplate(BoxSide.IN, c_sq.id, None, 3))
+            func.add_bond(BondTemplate(BoxSide.IN, i_plus_1.id, None, 4))
+            func.add_bond(BondTemplate(BoxSide.IN, res_eq_0.id, None, 5))
+            func.add_bond(BondTemplate(BoxSide.IN, if_res_eq_0_and_abs_c_gt_2_then_i_else_res.id, 1, 4))
+            func.add_bond(BondTemplate(BoxSide.IN, if_res_eq_0_and_abs_c_gt_2_then_i_else_res.id, 2, 5))
+            func.add_bond(BondTemplate.empty())
+
+            func.add_bond(BondTemplate(BoxSide.OUT, c0_real.id, 0, 0))
+            func.add_bond(BondTemplate(BoxSide.OUT, c0_imag.id, 0, 1))
+            func.add_bond(BondTemplate(BoxSide.OUT, if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_real.id, 0, 2))
+            func.add_bond(BondTemplate(BoxSide.OUT, if_res_eq_0_and_abs_c_not_gt_2_then_c_sq_plus_c0_else_c_imag.id, 0, 3))
+            func.add_bond(BondTemplate(BoxSide.OUT, i_plus_1.id, 0, 4))
+            func.add_bond(BondTemplate(BoxSide.OUT, if_res_eq_0_and_abs_c_gt_2_then_i_else_res.id, 0, 5))
+
+            bm.store(func, name, overwrite=False)
+        # end def
+
+        def create_mandelbrot():
+            name = "mandelbrot"
+
+            idg: IdGenerator = IdGenerator()
+
+            btf: BlockTemplateFactory = BlockTemplateFactory(idg)
+            func = BlackBoxFactory()
+            func.add_desc("Calculates the mandelbrot value for a given point on the complex plane defined by c0.\n"
+                          "\n"
+                          "IN pins:\n"
+                          "* [0] c0: Real part of the input point on the complex plane.\n"
+                          "* [1] c0: Imaginary part of the input point on the complex plane.\n"
+                          "* [2] n_rep Number of repetitions.\n"
+                          "\n"
+                          "OUT pins:\n"
+                          "* [0] res: The resulting mandelbrot value for the given point.\n")
+
+            c_real = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 0., name="c_real"))
+            c_imag = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 0., name="c_imag"))
+            ii = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 1., name="i"))
+            res = func.add_block(btf.get_block_template(BlockType.VAL_CONST, 0., name="res"))
+            mandelbrot_inner = func.add_block(btf.get_block_template(BlockType.BOX, box_name=bm.get_filename_from_name("mandelbrot_inner"), name="mandelbrot_inner"))
+
+            #xxx = func.add_block(btf.get_block_template(BlockType.VAL_VAR, name="xxx"))
+
+            # Interconnect the blocks of the box
+            func.add_conn(ConnTemplate(c_real.id, 0, mandelbrot_inner.id, 2))
+            func.add_conn(ConnTemplate(c_imag.id, 0, mandelbrot_inner.id, 3))
+            func.add_conn(ConnTemplate(ii.id, 0, mandelbrot_inner.id, 4))
+            func.add_conn(ConnTemplate(res.id, 0, mandelbrot_inner.id, 5))
+            #func.add_conn(ConnTemplate(xxx.id, 0, mandelbrot_inner.id, 6))
+
+            # Bond the block of the box to the box pins
+            func.add_bond(BondTemplate(BoxSide.IN, mandelbrot_inner.id, 0, 0))
+            func.add_bond(BondTemplate(BoxSide.IN, mandelbrot_inner.id, 1, 1))
+            func.add_bond(BondTemplate(BoxSide.IN, mandelbrot_inner.id, 6, 2))
+            #func.add_bond(BondTemplate(BoxSide.IN, xxx.id, 0, 2))
+            func.add_bond(BondTemplate(BoxSide.OUT, mandelbrot_inner.id, 4, 0))  # 5, 0))  # XXX zum test, wie viele itetationen überhaupt gemacht werden, ehe ich mit die mandelbrot-werte anschaue
+
+            bm.store(func, name, overwrite=True)
+        # end def
+
+        create_mandelbrot_inner()
+        create_mandelbrot()
+
+        bm.scan_dir()
+        mandelbrot_inner = bm.load("mandelbrot_inner")
+        mandelbrot = bm.load("mandelbrot")
+
+        # --
+
+        scale = Const(1. / 5)
+        p_x_scaled = MulN()
+        p_x_scaled.conn_to_prev_block(scale, 0, None)
+        p_x_scaled.conn_to_prev_block(p, 0, None)
+        p_y_scaled = MulN()
+        p_y_scaled.conn_to_prev_block(scale, 0, None)
+        p_y_scaled.conn_to_prev_block(p, 1, None)
+
+        test_inner = True#False#True
+
+        if test_inner:
+            if mandelbrot_inner is not None:
+                mandelbrot_inner_func = mandelbrot_inner.inst("mandelbrot_inner")
+
+                mandelbrot_inner_func.conn_to_prev_block(p_x_scaled, 0, 0)
+                mandelbrot_inner_func.conn_to_prev_block(p_y_scaled, 0, 1)
+                mandelbrot_inner_func.conn_to_prev_block(Const(0), 0, 2)
+                mandelbrot_inner_func.conn_to_prev_block(Const(0), 0, 3)
+                mandelbrot_inner_func.conn_to_prev_block(Const(1), 0, 4)
+                mandelbrot_inner_func.conn_to_prev_block(Const(0), 0, 5)
+                mandelbrot_inner_func.conn_to_prev_block(Const(10), 0, 6)
+
+                d.conn_to_prev_block(mandelbrot_inner_func, 5, 0)
+            else:
+                draw = False
+            # end if
+        else:
+            if mandelbrot is not None:
+                mandelbrot_func = mandelbrot.inst("mandelbrot")
+
+                mandelbrot_func.conn_to_prev_block(p_x_scaled, 0, 0)
+                mandelbrot_func.conn_to_prev_block(p_y_scaled, 0, 1)
+                mandelbrot_func.conn_to_prev_block(Const(10), 0, 2)
+
+                d.conn_to_prev_block(mandelbrot_func, 0, 0)
+
+                # XXX Funktioniert nicht. Bisher festgestllt: Im RepeatBlock findet überhaupt kein Repeating statt.. wie kann das sein?
+                # XXX vllt. muss ich was einbauen hinter der repeatbox, die an den output pins zieht, sonst werden diese evtl. gar nicht erst berechnet? -> dann würde das erste obrige example mit mandelbrot_inner auch nicht funktionieren
+                # XXX hat es evtl. damit zu tun, dass ich mehrere ouput-werte habe und das setzen von values_calculated nicht richtig funktioniert?
+            else:
+                draw = False
+            # end if
+        # end if
+
+        width = 40
+        height = 20
     # end if
 
     if draw:
-        cm = CrazyMatrix(circuit=c, width=400, height=200)
+        cm = CrazyMatrix(circuit=c, width=width, height=height)
         cm.plot()
     # end if
 # end def

@@ -46,15 +46,10 @@ class IBox(ABC):
 # end class
 
 
-class IBoxBlock(IBox, IBlock):  # XXX
-    pass
-# end class
-
-
 class Block(IBlock):
     def __init__(self, n_in: Optional[int], n_out: Optional[int], name: Optional[str] = None) -> None:
-        self._pin_value: List[Optional[float]] = []
-        self._conn_in: List[Optional[Conn]] = []
+        self._pin_value: List[Optional[float]] = list()
+        self._conn_in: List[Optional[Conn]] = list()
 
         # Connection from previous block into this one
         if n_in is not None:
@@ -120,7 +115,7 @@ class Block(IBlock):
                 print(f"Overwriting in pin {in_pin}")
             self._conn_in[in_pin] = conn
         else:
-            raise ValueError(f"Pin of previous block {prev_pin} not in range 0..{prev_block.n_out}.")
+            raise ValueError(f"Pin ({prev_pin}) of previous block not in range 0..{prev_block.n_out}.")
         # end if
     # end def
 

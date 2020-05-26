@@ -1,7 +1,17 @@
 meta:
   version: '1.0'
-  desc: |-
-    None
+  desc: |
+    Calculates the euclidean distance between two points, scaled by a factor.
+
+    IN pins:
+    * [0] X-coordinate of point A.
+    * [1] Y-coordinate of point A.
+    * [2] X-coordinate of point B.
+    * [3] Y-coordinate of point B.
+    * [4] Scaling factor.
+
+    OUT pins:
+    * [0] Distance.
 box:
   n_in: 5
   n_out: 1

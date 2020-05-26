@@ -1,6 +1,6 @@
 # Ideas:
 # * Timestamps als input (als zufallszahlen oder sind das zweierlei Dinge)
-# auch normal verteilte zufallsdaten - was könnte man damit cooles visualisieren?
+# auch normal (und poisson, etc.) verteilte zufallsdaten sampeln - was könnte man damit cooles visualisieren?
 # * Streamplot?
 # das ganze auch als 3d mit (animierten) schnitten durch den cube - aber eher sehr rechenintensiv oder nur den solice rechnen, anstatt den ganzen cube
 # XXX str und repr implementieren und dadurch auch leicht ersichtlich machen, wer mit wem verbunden ist
@@ -33,6 +33,18 @@ In block_manager.cross_check() alle prüfungen rein, also ob ein circuit connect
             # XXX geprüft werden, ob die pin parameter richtig gesetzt sind:
             # XXX -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, 0)) -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, None))
                save blocks in a configurable folder
+
+rpeatbox derart bauen, dass es eien weitere funktion gibt, mit der ich festlegt, welcher out pin mit welchem in pin verknüpft wird, wenn eien wiederholung stattfindet - anstatt unnötige out pins zu erzeugen, nur damit genau der gleiche index für in undout pins verwendet werden kann
+
+test für connections problems:
+* einfach für z.b. ein not, das conn_to_prev_block() nicht aufrufen und dann laufen lassen, denn dann ist der pin = None und es knallt
+* aber moment mal: es wäre viel wichtiger, die templates zu prüfen, da mit diesen langfristig gearbeitet werden wird
+
+optional ncoh zwei weitere plots links und unterhalb, die den aktuellen schnitt an der aktuellen
+
+die ganze berechnung müsste isch ja super parallelisieren lassen, oder?
+
+nochmal die box_name's checken, denn z.b. im mandelbrot.cmb steht der volle pfad für den inner-block drin, was so nicht sein soll
 
 
 funktionen

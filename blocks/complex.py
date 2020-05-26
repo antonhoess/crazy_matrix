@@ -3,7 +3,7 @@ from base.block import Block, BlockFixed
 
 class ComplexAddN(Block):
     def __init__(self):
-        Block.__init__(self, None, 1)
+        Block.__init__(self, None, 2)
     # end def
 
     def _calc_values(self):
@@ -58,7 +58,7 @@ class ComplexSub(BlockFixed):
 
 class ComplexMulN(Block):
     def __init__(self):
-        Block.__init__(self, None, 1)
+        Block.__init__(self, None, 2)
     # end def
 
     def _calc_values(self):

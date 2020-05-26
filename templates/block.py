@@ -5,6 +5,8 @@ from enum import Enum
 
 from blocks.const_var import *
 from blocks.math import *
+from blocks.complex import *
+from blocks.bool import *
 from base.block import IBlock
 
 
@@ -38,6 +40,7 @@ class BlockType(Enum):
     VAL_CONST = "const"
     VAL_CONST_E = "const_e"
     VAL_CONST_PI = "const_pi"
+    VAL_VAR = "var"
     MATH_ADD = "add"
     MATH_SUB = "sub"
     MATH_MUL = "mul"
@@ -59,6 +62,16 @@ class BlockType(Enum):
     MATH_TAN = "tan"
     MATH_ATAN = "atan"
     MATH_ATAN2 = "atan2"
+    COMPLEX_ADD = "cadd"
+    COMPLEX_SUB = "csub"
+    COMPLEX_MUL = "cmul"
+    COMPLEX_DIV = "cdiv"
+    BOOL_AND = "and"
+    BOOL_OR = "or"
+    BOOL_NOT = "not"
+    BOOL_GT = "gt"
+    BOOL_LT = "lt"
+    BOOL_EQ = "eq"
 # end class
 
 
@@ -160,6 +173,9 @@ class BlockTemplateFactory:
             elif t is BlockType.VAL_CONST_PI:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(0, 1))
 
+            elif t is BlockType.VAL_VAR:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
+
             elif t is BlockType.MATH_ADD:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(None, 1))
 
@@ -223,6 +239,36 @@ class BlockTemplateFactory:
             elif t is BlockType.MATH_ATAN2:
                 self.__block_pin_count_templates.append(BlockPinCountTemplate(2, 1))
 
+            elif t is BlockType.COMPLEX_ADD:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(None, 2))
+
+            elif t is BlockType.COMPLEX_SUB:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(4, 2))
+
+            elif t is BlockType.COMPLEX_MUL:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(None, 2))
+
+            elif t is BlockType.COMPLEX_DIV:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(4, 2))
+
+            elif t is BlockType.BOOL_AND:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(None, 1))
+
+            elif t is BlockType.BOOL_OR:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(None, 1))
+
+            elif t is BlockType.BOOL_NOT:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(1, 1))
+
+            elif t is BlockType.BOOL_GT:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(2, 1))
+
+            elif t is BlockType.BOOL_LT:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(2, 1))
+
+            elif t is BlockType.BOOL_EQ:
+                self.__block_pin_count_templates.append(BlockPinCountTemplate(None, 1))
+
             else:
                 raise NotImplementedError(f"Enum entry {t} not handled!")
             # end if
@@ -252,7 +298,7 @@ class BlockTemplateFactory:
 
 class BlockFactory:
     @staticmethod
-    def inst(block_template: BlockTemplate, value: Optional[Union[float, str]] = None) -> Optional[IBlock]:
+    def inst(block_template: BlockTemplate, value: Optional[float] = None, box_name: Optional[float] = None) -> Optional[IBlock]:
         if block_template.type is BlockType.SYS_IN_POS:
             return None
 
@@ -262,7 +308,7 @@ class BlockFactory:
         elif block_template.type is BlockType.BOX:
             from templates.box import BlackBoxFactory  # Due to circular dependency
 
-            return BlackBoxFactory().load(value).inst()  # XXX Hier einen Namen mit übergeben? Wie könnte dies nützlich sein?
+            return BlackBoxFactory().load(box_name).inst()  # XXX Hier einen Namen mit übergeben? Wie könnte dies nützlich sein?
 
         elif block_template.type is BlockType.VAL_CONST:
             return Const(value)
@@ -272,6 +318,9 @@ class BlockFactory:
 
         elif block_template.type is BlockType.VAL_CONST_PI:
             return ConstPi()
+
+        elif block_template.type is BlockType.VAL_VAR:
+            return Variable()
 
         elif block_template.type is BlockType.MATH_ADD:
             return AddN()
@@ -335,6 +384,36 @@ class BlockFactory:
 
         elif block_template.type is BlockType.MATH_ATAN2:
             return Atan2()
+
+        elif block_template.type is BlockType.COMPLEX_ADD:
+            return ComplexAddN()
+
+        elif block_template.type is BlockType.COMPLEX_SUB:
+            return ComplexSub()
+
+        elif block_template.type is BlockType.COMPLEX_MUL:
+            return ComplexMulN()
+
+        elif block_template.type is BlockType.COMPLEX_DIV:
+            return ComplexDiv()
+
+        elif block_template.type is BlockType.BOOL_AND:
+            return AndN()
+
+        elif block_template.type is BlockType.BOOL_OR:
+            return OrN()
+
+        elif block_template.type is BlockType.BOOL_NOT:
+            return Not()
+
+        elif block_template.type is BlockType.BOOL_GT:
+            return Gt()
+
+        elif block_template.type is BlockType.BOOL_LT:
+            return Lt()
+
+        elif block_template.type is BlockType.BOOL_EQ:
+            return EqN()
 
         else:
             return None

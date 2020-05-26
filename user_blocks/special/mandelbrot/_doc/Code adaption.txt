@@ -1,0 +1,70 @@
+The original code got adapted in two steps to change its structure whilst keeping its functionality:
+
+Original code
+#############
+def mandelbrot(x, y):
+    c0 = complex(x, y)
+    c = 0
+
+    for i in range(1, 10):
+        if abs(c) > 2:
+            return i
+        c = c * c + c0
+    # end for
+
+    return 0
+# end def
+
+Adaption 1 - introducre res variable,
+which holds the return value
+#####################################
+def mandelbrot2(x, y):
+    c0 = complex(x, y)
+    c = 0
+
+    res = 0
+    for i in range(1, 10):
+        if res == 0:
+            if abs(c) > 2:
+                res = i
+            else:
+                c = c * c + c0
+            # end if
+        # end if
+    # end for
+
+    return res
+# end def
+
+
+Adaption 2 - resolve nested if conditional blocks
+and always all variables (if-else) which are
+neccessary in the next loop
+#################################################
+def mandelbrot3(x, y):
+    c0 = complex(x, y)
+    c = complex(0, 0)
+
+    res = 0
+    i = 1
+    for _ in range(1, 10):
+        cgt2 = abs(c) > 2
+        res0 = res == 0
+
+        if res0 and cgt2:
+            res = i
+        else:
+            res = res
+        # end if
+
+        if res0 and not cgt2:
+            c = c * c + c0
+        else:
+            c = c
+        # end if
+
+        i += 1
+    # end for
+
+    return res
+# end def

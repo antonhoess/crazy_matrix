@@ -97,7 +97,7 @@ class CircuitFactory:
         inst_obj.blocks: List[Dict[str, Optional[IBlock]]] = list()
 
         for block in self._blocks:
-            inst_obj.blocks.append({"id": block.id, "block": bf.inst(block, block.value)})
+            inst_obj.blocks.append({"id": block.id, "block": bf.inst(block, value=block.value, box_name=block.box_name)})
         # end for
     # end def
 
