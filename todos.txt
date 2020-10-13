@@ -1,77 +1,51 @@
-# Ideas:
-# * Timestamps als input (als zufallszahlen oder sind das zweierlei Dinge)
-# auch normal (und poisson, etc.) verteilte zufallsdaten sampeln - was könnte man damit cooles visualisieren?
-# * Streamplot?
-# das ganze auch als 3d mit (animierten) schnitten durch den cube - aber eher sehr rechenintensiv oder nur den solice rechnen, anstatt den ganzen cube
-# XXX str und repr implementieren und dadurch auch leicht ersichtlich machen, wer mit wem verbunden ist
-# eienen normalizer machen, der den punkt transliert, invertiert, rotiert,etc. # das sind eher schon die matrizen sachen. wofür? für die nicht die koordinaten  von -200 - 200 gehen, sondern eher von -1 bis 1
+IDEAS
+-----
+* Use timestamps or also random values as input.
+* Use sampled values from e.g. normal or poisson random variables - what cool stuff could be rendered with that?
+* Use the matplotlib streamplot, which might be interesting for some data to visualize.
+* Create it as a 3D plot and make a cut (slope) through the cube (only calculate the cells needed!).
+* Implement str() and repr() to simplify the understanding which block is connected with which other.
+* Optionally create two more plots to the left and below the main plot that visualizes the section of the current cursor position.
+* Add a gui with blocks and easily connectable conns between them. Maybe allow to draw intermediate graphics after each step (if it even makes sense).
 
 
-black boxen
+BLACK BOXES
 -----------
-blackbox machen, die alles von -1..1 skaliert in jede dimension
-.. oder eine, die polar koordinaten umwandelt
-auch einen block machen, der den pin versetzt und skaliert
-
-if else etc. blocks einfügen?
-
-# XXX anstatt für jedes pixel immer alles neu durchzurechnen, vllt. über setter funktionen setzen, der wert welcher conn wurde geändert und nur dann den block neu berechnen, sonst nicht
-
-# XXX Normalisierungen ganz am ende, aber auch zwischendrin. dazu müssen werte gesamt betrachtet werden - wie soll das gehen?
-# anstatt die pixel einzeln zu berechnen, könnte man versuchen, alles zu vektorisieren mit numpy - das dürfte eine erhebliche Beschleunigung des Programmes zur Folge haben.
-
-# Checken, ob und wo und wie das einführen von Namen für (ja für welche elemente alles? block, blackbox, conn, etc.?) sinnvoll ist für das debugging und debugging ausgaben und auch für den user, z.b. namen für einzelne blocks, um sie wiederzuerkennen.
-
-# Viele prüfungen einbauen, insb. beim connecten mit den indizes, deren ranges und ob der wert None ist, der als param übergeben wird und/oder ob intern der wert None ist, d.h. die anzahl an pins ist nicht fix.. mal separatm die logik übersichtlich notieren
-# XXX Auch eine Funktion machen zum prüfen, ob alle pins belegt sind, auch ovm drawer, damit sichergestellt ist, dass er überhaupt funktionieren kann
-# bei checks auf vollständige verbindungen beachten, dass z.b. bei einer repeatbox ein pin reingeht, aber nicht weiter verwendet wird (nur vond er repeatbox selbst als anzahl an Wiederholungen)
-verschiedene schema files für die 2-3 unterschiedlichen file typen? oder nur eines und dafür noch einen cross_check einbauen, was mit ohnehin prüfungen erlaubt, die ich so gar nciht mit dem schema abbilden kann
-In block_manager.cross_check() alle prüfungen rein, also ob ein circuit connected ist zum drawer, etc. pp?
-
-# BlockFactory.inst(): # XXX und hier nicht direkt über filenamen gehen, sondern über einen eindeutigen namen, der in den filenamen umgesetzt iwrd oder auch in einer internen liste mit verfügbaren modulen verwaltet wird? ersteres scheint einfcah erzu sein
-            # XXX ConnTemplate.fromxxx() einfügen, dem direkt die objekte und nicht die id-strings übergeben werden. dadurch könnte ich z.B. in einem Fall wie folgt
-            # XXX geprüft werden, ob die pin parameter richtig gesetzt sind:
-            # XXX -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, 0)) -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, None))
-               save blocks in a configurable folder
-
-rpeatbox derart bauen, dass es eien weitere funktion gibt, mit der ich festlegt, welcher out pin mit welchem in pin verknüpft wird, wenn eien wiederholung stattfindet - anstatt unnötige out pins zu erzeugen, nur damit genau der gleiche index für in undout pins verwendet werden kann
-
-test für connections problems:
-* einfach für z.b. ein not, das conn_to_prev_block() nicht aufrufen und dann laufen lassen, denn dann ist der pin = None und es knallt
-* aber moment mal: es wäre viel wichtiger, die templates zu prüfen, da mit diesen langfristig gearbeitet werden wird
-
-optional ncoh zwei weitere plots links und unterhalb, die den aktuellen schnitt an der aktuellen
-
-die ganze berechnung müsste isch ja super parallelisieren lassen, oder?
-
-nochmal die box_name's checken, denn z.b. im mandelbrot.cmb steht der volle pfad für den inner-block drin, was so nicht sein soll
+* Create a black box that scales everything into the range from -1..1 in each dimension. Should be ease by using the newly created pins that give the view size in both dimension and then just scale it. Check if already implemented.
+* Create a black box that converts from/to polar coordinates.
+* Create a black box that places the pin to another location instead of the center of the drawing plane.
+* Create a black box for if-else: two input values and a value whose boolean value defines the switch value.
+* Create a normalizer which translates, inverts, rotates, etc. a point. Might be useful e.g. for coordinates that are not ranging from -180 - 180 gehen, but from -1 bis 1.
+* Create a common type with N+1 inputs and N ouputs. The input N+1 serves as a scaling factor for each of the other input values and the scales values are passed to its corresponding output. Might be especially interesting for the scaling of the current point. (x, y).
+* Create a sync-barrier? Maybe necessary for the RepeatBlock to first do all operations up to the barrier before continuing. This barrier might be sitting at the input- and output layer and forces to to the first iteration before the recursion happens - otherwise there might be an undefined behavior). Is this barrier the same as a Multiplier with a factor of 1? Check, if this was not already solved.
+* Create a block/blackbox that converts a value of None to some other value (constant) (i.e. take the value of another pin if the value of the main pin is None).
+* Make a test with a repeatbox that doubles a number in each recursion cycle and when a certain limit is reached ouput xxx (output what? the number of iterations or the value or the limit value?). -> This shall be a basis for the mandelbrot. Already implemented?
 
 
-funktionen
-----------
-# die ganzen auskommentierten blöcke in deprecated anschauen, z.b. auch discretisize()
-# einen allgemein typ machen, der N+1 nputs und N outputs hat. der n+1te input gibt den skalierungsfaktor an, mit dem jeder eingang multipliziert entsprechend an seinem output ausgegeben wird -> insb. interessant zur skalierung des aktuellen punktes (x, y)
-# -> XXX Eine Synchronisations-Barriere bauen? -> Evtl. notwendig für den RepeatBlock, damit erst alle Operationen bos zur Barriere (welche direkt am Input- bzw. Output-Layer sitzt, ausgeführt werden, ehe die Rekursion ausgeführt wird - sonst dürfte es ein undefiniertes Verhalten geben.
-# -> diese barriere entspricht eigtl. genau einem multiplier mit faktor 1
-# -> Oder mit einer Variable, die mehrere elemente hat? damit könnte man auch einen punkt mit zwei koordinaten definieren, anstatt jede koordinate einzeln
-# XXX werte cappen ; was ist mit None? einen block, der none umwandeln in was anderes, z.b. eine konstante
-# eien funktion einbauen, die einen wert übernimmt, falls das argument None ist - evtl. selber bauen (wie meinte ich das? als blackbox?)
-# checken, ob sich matrizen und matrizenoperationen irgendwie flexibel einbauen lassen? am beispiel der rotationsmatrix.
-# check notes in templates/block.py
-# wie kann ich die output-werte-range fix definieren? also z.b.von 0..100 oder so?
+FUNCTIONS
+---------
+* Implement many checks, e.g. the indexes on connecting, their ranges, if the input-value is None or if the internal value is None, i.e. die number of pins is not fixed.
+* Implement a check, if all (necessary) pins are connected. Also the drawer's pin to ensure that it even is able to work. Consider on checking the repeatbox that there are input-connections (e.g. the number of repetitions) that are not used further.
+* Add all checks to block_manager.cross_check() if a circuit is connected to the drawer, etc.?
+* Howto test connection problems: Just don't call conn_to_prev_block() for a "not" and run the program. In this case the pin = None and it should crash. But: it might be way more importanter to check the templates since it will be them that we work with on the long run.
+* On adding a bond in a repeatbox check for the input-layer's n_out and not for n_in in the repeatbox. Check and implement this.
 
-beim hinzufügen von bonds in einer repeatbox muss auf die n_out des input layer geprüft werden und nicht auf n_in der repeatbox -> prüfen und umsetzen
+* Check if and where the introduction of names for e.g. block, blackbox, conn makes sense for debugging and print-debugging as well as for the user, e.g. for names to recognize individual blocks.
+* Don't use filenames in BlockFactory.inst() but an ID string that get's translated into a filename. Maybe organize these names in an internal list of available modules. The first option seems to be simpler.
+* Add ConnTemplate.fromxxx() for directly passing objects instead of ID strings. This might allow to check if the parameters are set correctly in a case like the following one: dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, 0)) -> dist_func.add_conn(ConnTemplate(mul_21.id, 0, add_21_22.id, None))
+* Check the box's names (box_name), since e.g. in  mandelbrot.cmb the full path is used for the inner-block, which is not good.
 
-als näcshtes einen test mit einer repeat box machen, in der zahlen immer verdoppelt werden aber wenn ein bestimmter wert überschritten wrid, dieser am ende ausgegeben wird. also 5 * 2 * 2 * ... * 2 und als limit 20 angeben.
--> und dann endlich das mandelbrot machen
+* Modify the repeatbox in a way that there is a new function that defines which output-pin gets linked with which input-pin is there's a repitition. - instead of creating a lot of unnecessary pins just to have the same number of input and output pins.
 
-anstatt auf einmal zu zeichnen, das zeichnen in einen thread auslagern, der (parametrisiert) gröber rastert (jedoch mit gleichen x und y werten) und wie bei gif nach und nach erst genauer wird - eine art preview, die schnelelr erahnen kässt, wohin die reise geht
+* Do normalization steps not only at the end but also during the calculation pipeline. For this, the logic neds to be changed, since all values needed to be calculated before doing a normalization (it needs all values to calculate the values' total range) - only possible if not each single pixel gets evaluated but all pixels at once (using a numpy vector).
+
+* Check if it makes sense to use three different YAML schema files for the different type (block, blackbox, repeatbox) or only a single schema file. Probably there needs to be done some cross-checking anyway which is not possible using the schema files so a single file might be okay.
+
+* Instead of doing the calculation for each pixel anew, remember which conn was changed (use a setter function for that) and only calculated the block anew, if something has change, else ose the old values.
+* Instead of drawing everything at once, calculate first a raw raster and make it more and more fine - the same way it is done at GiF files. This might help to create some quick preview to understand early what the result might look like. Maybe use threads for this.
 
 
-
-# Infos
-#######
-* Namensgebung:
-  * cmc = crazy matrix circuit
-  * cmb = crazy matrix black (box)
-  * ??? cmr = crazy matrix repeat (box)
+FIXES
+-----
+* Check all the blocks in "deprecated", e.g. discretisize().
+* Check notes in templates/block.py.
