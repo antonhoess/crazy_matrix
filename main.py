@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import List, Optional
 import sys
+import argparse
+
+"""Draw some graphics based on mathematical rules."""
 
 from base.basic import Point
 from base.black_box import BlackBox, RepeatBox
@@ -16,9 +19,28 @@ from templates.box import BlackBoxFactory, RepeatBoxFactory
 from templates.bond import BoxSide, BondTemplate
 from templates.conn import ConnTemplate
 from base.block import Conn
+from gui import Gui
+
+
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+__credits__ = list()
+__license__ = "BSD"
+__version__ = "0.1"
+__maintainer__ = "Anton Höß"
+__email__ = "anton.hoess42@gmail.com"
+__status__ = "Development"
 
 
 def main(_argv: List[str]):
+
+    # Read command line arguments
+    parser = argparse.ArgumentParser(description="Draw some graphics based on mathematical rules.")
+    parser.add_argument("-t", "--test", type=int, required=True,
+                        help="Defines the test example to run.")
+    args = parser.parse_args()
+
+    # Run selected example
     c = Circuit()
 
     p = c.point
@@ -28,7 +50,7 @@ def main(_argv: List[str]):
     bm.scan_dir()
 
     # test 26 creates all predefined user-blocks anew
-    test = 29  # 17 (circuit), 19 (black box), 25 (repeat box)
+    test = args.test  # 29  # 17 (circuit), 19 (black box), 25 (repeat box)
 
     draw = True
 
@@ -1523,7 +1545,7 @@ def main(_argv: List[str]):
             func.add_bond(BondTemplate(BoxSide.IN, mandelbrot_inner.id, 1, 1))
             func.add_bond(BondTemplate(BoxSide.IN, mandelbrot_inner.id, 6, 2))
             #func.add_bond(BondTemplate(BoxSide.IN, xxx.id, 0, 2))
-            func.add_bond(BondTemplate(BoxSide.OUT, mandelbrot_inner.id, 4, 0))  # 5, 0))  # XXX zum test, wie viele itetationen überhaupt gemacht werden, ehe ich mit die mandelbrot-werte anschaue
+            func.add_bond(BondTemplate(BoxSide.OUT, mandelbrot_inner.id, 4, 0))  # 5, 0))  # XXX For test on how many iterations are made before inspecting the mandelbrot values
 
             bm.store(func, name, overwrite=True)
         # end def
@@ -1573,9 +1595,10 @@ def main(_argv: List[str]):
 
                 d.conn_to_prev_block(mandelbrot_func, 0, 0)
 
-                # XXX Funktioniert nicht. Bisher festgestllt: Im RepeatBlock findet überhaupt kein Repeating statt.. wie kann das sein?
-                # XXX vllt. muss ich was einbauen hinter der repeatbox, die an den output pins zieht, sonst werden diese evtl. gar nicht erst berechnet? -> dann würde das erste obrige example mit mandelbrot_inner auch nicht funktionieren
-                # XXX hat es evtl. damit zu tun, dass ich mehrere ouput-werte habe und das setzen von values_calculated nicht richtig funktioniert?
+                # XXX
+                # Doesn't work. Findings so far: in the RepeatBox doesn't happen any repetition... how is this possible?
+                # Do I have to build in something after the RepeatBox, that "pulls" on the output pins because they might even not get calculated if no one asks for their values - in this case the example above won't work with mandelbrot_inner, too
+                # Might it be linked to the fact that I have multiple output values and the settings of values_calculated doesn't work properly?
             else:
                 draw = False
             # end if
@@ -1587,10 +1610,16 @@ def main(_argv: List[str]):
 
     if draw:
         cm = CrazyMatrix(circuit=c, width=width, height=height)
-        cm.plot()
+
+        image = cm.calc_image()
+        gui = Gui()
+        gui.load_test()  # Only for testing (example)
+        gui.show_image(image)  # Will later get called from within the gui
+        gui.run()
     # end if
 # end def
 
 
 if __name__ == "__main__":
     main(sys.argv)
+# end if

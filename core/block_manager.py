@@ -9,6 +9,10 @@ from templates.circuit import CircuitFactory
 from templates.box import BlackBoxFactory, RepeatBoxFactory
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 # Overwrite the original implementation, since it doesn't support other filename extension. This problem was solved by pykwalifire, but I didn't succeed to install it.
 class MyCore(pykwalify.core.Core):
     def __init__(self, source_file=None, schema_files=None, source_data=None, schema_data=None, extensions=None, strict_rule_validation=False,

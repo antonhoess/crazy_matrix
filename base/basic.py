@@ -1,6 +1,10 @@
 from base.block import BlockFixed
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class Drawer(BlockFixed):
     def __init__(self):
         BlockFixed.__init__(self, 1, 0)

@@ -6,6 +6,10 @@ from base.black_box import BlackBox, RepeatBox
 from templates.circuit import CircuitFactory
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class BlackBoxFactory(CircuitFactory):
     def __init__(self):
         CircuitFactory.__init__(self)

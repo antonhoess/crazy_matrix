@@ -3,6 +3,10 @@ from typing import List, Optional
 from abc import ABC, abstractmethod
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class IBlock(ABC):
     @property
     @abstractmethod

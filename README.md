@@ -7,7 +7,10 @@ Allows the creation of visualization using combined mathematical expressions usi
 conda init bash # => Open new terminal
 conda create --name crazy_matrix python=3.7
 conda install --name crazy_matrix numpy
-conda install --name crazy_matrix matplotlib
+conda install --name crazy_matrix uuid
+conda install --name crazy_matrix tk
+conda install --name crazy_matrix matplotlib #xxx entfernen?
+conda install --name crazy_matrix PyYAML
 conda install --name crazy_matrix -c conda-forge pykwalify
 ```
 

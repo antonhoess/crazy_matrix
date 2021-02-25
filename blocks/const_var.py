@@ -5,6 +5,10 @@ from base.block import BlockFixed
 import numpy as np
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class Const(BlockFixed):
     def __init__(self, value: float, name: Optional[str] = None):
         BlockFixed.__init__(self, 0, 1, name=name)

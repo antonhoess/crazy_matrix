@@ -8,6 +8,10 @@ from templates.block import BlockType, BlockTemplate, BlockFactory
 from templates.conn import ConnTemplate
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class Literal(str):
     @staticmethod
     def literal_presenter(dumper, data):

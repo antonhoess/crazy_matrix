@@ -1,6 +1,10 @@
 from base.block import Block, BlockFixed
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class ComplexAddN(Block):
     def __init__(self):
         Block.__init__(self, None, 2)

@@ -3,6 +3,10 @@ from typing import Optional, Sequence
 from base.block import BlockFixed, Block, IBlock
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class AndN(Block):
     def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
         Block.__init__(self, None, 1, name=name)

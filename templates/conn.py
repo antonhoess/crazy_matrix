@@ -2,6 +2,10 @@ from __future__ import annotations
 from typing import Optional
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class ConnTemplate:
     def __init__(self, in_block_id: str, in_block_pin: int, out_block_id: str, out_block_pin: Optional[int]):
         self.__in_block_id: str = in_block_id

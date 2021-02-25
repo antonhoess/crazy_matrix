@@ -5,6 +5,10 @@ import numpy as np
 from base.block import Block, BlockFixed, IBlock
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class AddN(Block):
     def __init__(self, prev_blocks: Sequence[IBlock] = None, name: Optional[str] = None):
         Block.__init__(self, None, 1, name=name)

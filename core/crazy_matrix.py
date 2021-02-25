@@ -6,6 +6,10 @@ import numpy as np
 from base.basic import Circuit
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class CrazyMatrix:
     def __init__(self, circuit: Circuit, width: int, height: int, cmap: Optional[str] = None):
         self.__w: int = width
@@ -31,7 +35,7 @@ class CrazyMatrix:
         return 0
     # end def
 
-    def plot(self):
+    def calc_image(self) -> np.ndarray:
         offset_x = int(-self.__w / 2)
         offset_y = int(-self.__h / 2)
         scale = 1. / 50
@@ -47,11 +51,8 @@ class CrazyMatrix:
             # end for
         # end for
 
-        fig, ax = plt.subplots()
+        z = z.transpose()
 
-        ax.imshow(np.transpose(z), interpolation="nearest", cmap=self.__cmap, origin='lower', extent=[-self.__w / 2, self.__w / 2, -self.__h / 2, self.__h / 2])#, vmax=0)#, vmax=np.abs(Z).max(), vmin=-np.abs(Z).max())  # interpolation="bilinear"
-        ax.set_aspect("equal")
-
-        plt.show()
+        return z
     # end def
 # end class

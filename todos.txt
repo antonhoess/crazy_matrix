@@ -7,6 +7,8 @@ IDEAS
 * Implement str() and repr() to simplify the understanding which block is connected with which other.
 * Optionally create two more plots to the left and below the main plot that visualizes the section of the current cursor position.
 * Add a gui with blocks and easily connectable conns between them. Maybe allow to draw intermediate graphics after each step (if it even makes sense).
+* Add a spiral that rotates even faster the greater the distance from the center.
+* Add command line arguments to define which test to run.
 
 
 BLACK BOXES
@@ -49,3 +51,17 @@ FIXES
 -----
 * Check all the blocks in "deprecated", e.g. discretisize().
 * Check notes in templates/block.py.
+
+
+UNASSIGNED
+----------
+* How to use self.find_closest(event.x, event.y)?
+* Allow inspection on every output pin, including the ones that give the x- and y-coordinates. This is like debugging and fun, too.
+* Think about on how to handle the output images size. Currently it is fixed and get stretched for showing it in the lower part of the program. Introduce different modes like scale-always, scale-down (if there's not enough space), scale-never (might hide some part of the image). Or using a ratio and then calculate the full rectangle which fits into the lower area of the program.
+* Probably add a tkinter.Separator between the upper and lower part of the program.
+* Add a status bar (is there something in tkinter or do I have to design it myself?) which shows the coordinates. To calculate the right position, I need to recalculates the raw cursor position with all offsets and scalings.
+* Possibly implement the coordinates as a class object, which allows to transport this information with only one parameter instead of four. What might be a good name?
+* Think about introducing an interface to control the design of the editor.
+* Continue with the implementation of the connectors in the editor. Does it make sense and is it even possible to create a class for it?
+* Think about the usage of tkinter.Canvas tags systematically. Does it make sense to implement functions that give me the reference to the associated class/object? Generally think about: how to connect the class objects and the canvas elements?
+* Later think about BlackBox and RepeatBox, loading and storing into/from the editor.

@@ -3,6 +3,10 @@ from typing import Optional
 from enum import Enum
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class BoxSide(Enum):
     IN = "in"
     OUT = "out"

@@ -4,6 +4,10 @@ from typing import List, Optional
 from base.block import IBlock, IBox, BlockFixed, Conn
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class _PassThroughFixed(BlockFixed):
     def __init__(self, n_in_out: int) -> None:
         BlockFixed.__init__(self, n_in_out, n_in_out)

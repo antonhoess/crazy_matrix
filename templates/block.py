@@ -10,18 +10,25 @@ from blocks.bool import *
 from base.block import IBlock
 
 
+__author__ = "Anton Höß"
+__copyright__ = "Copyright 2021"
+
+
 class IdGenerator:
     def __init__(self):
-        self.__ids: List[str] = []
+        self._ids: List[str] = list()
     # end def
 
-    def new_id(self) -> str:
+    def new_id(self, length: Optional[int] = None) -> str:
         while True:
-            new_id = uuid.uuid4().hex[:4]
+            new_id = uuid.uuid4().hex
+
+            if length is not None:
+                new_id = new_id[:length]
 
             # Try again to find a free uuid, if this one is already in use (which is very unlikely)
-            if new_id not in self.__ids:
-                self.__ids.append(new_id)
+            if new_id not in self._ids:
+                self._ids.append(new_id)
                 break
             else:
                 continue
@@ -287,7 +294,7 @@ class BlockTemplateFactory:
                     block_pin_count_template: BlockPinCountTemplate = BlockPinCountTemplate(bf.n_in, bf.n_out)
                 # end if
 
-                return BlockTemplate(_type, block_pin_count_template.n_in, block_pin_count_template.n_out, self.__id_gen.new_id(), value, box_name, name=name)
+                return BlockTemplate(_type, block_pin_count_template.n_in, block_pin_count_template.n_out, self.__id_gen.new_id(length=4), value, box_name, name=name)
             # end if
         # end for
 
