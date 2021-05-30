@@ -63,4 +63,4 @@ Disadvantages
 * Very complicated and in many ways expensise way to assign elements and find the element you want when handling events. They are very nested using just their tags.
 * No direct assignment of objects, etc. Only tags are allowed.
 * No events for the items are available, so everything needs to be programmed in a non-comfortable way. With events one might move its children with it.
-* No advantags of OOP concepts like encapsulation, instantiation, etc. The code stays quite unstructured.
+* No advantags of OOP concepts like encapsulation, instantiation, etc. The code stays quite unstructured. There are projects liek https://allendowney.com/swampy/Gui.html#GuiCanvas, but they don't really help in this case.
