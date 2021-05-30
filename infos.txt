@@ -1,0 +1,66 @@
+GUI
+===
+
+
+
+
+# Description of used tags and their structure and relationship
+
+# Creation of a VBlock(tag)
+###########################
+# TAGs
+# ----
+# Since there might be UUID's that include only decimals and tkinter doesn't allow this, we need to add some
+# string at the beginning to distinguish these numbers from canvas object IDs.
+# * self._tag = "x" + tag  # The element (= the rectangle of this block)
+# * self._group_tag = "g" + tag   For all elements (incl. the rectangle) belonging to this block. Useful e.g. for
+#   moving, hiding or whatever operation of the block as a whole (i.e. of all its elements)
+# * input_conn = "i" + input pin index and "c" + connector_id
+# * output_conn = "o" + output pin index and "c" + connector_id
+#
+# IDs
+# ---
+# * master-ID: ID given in the constructor (the (partial) UUID string without the extension (like "x" or "g")
+# * self._object_id  # ID of the rectangle
+# * self._object_id_text  # ID of the label
+# * self.xxx resize lines xxx connectors...
+#
+# Functions
+# ---------
+# * get_current_object_id()  # Returns the ID of the topmost object currently under the mouse cursor
+# * get_master_tag(object_id)  # Returns the master-tag of the object given by its ID
+# * get_group_tag(object_id)  # Returns the group-tag of the object given by its ID
+# * get_master_id_from_group_tag(group_tag)  # Returns the master-id of the object given by its group-tag
+
+# Names
+# * tag-id
+# * master-tag
+# * group-tag
+
+# Find a way to create a function that unites everything this way: Given an id or tag find a certain id or tag
+#
+# Given:
+# id
+# tag
+# group-tag
+# -> Search path:  group-tag  -> id -> tag-id
+#
+# Wanted:
+# master-id
+# master-tag
+# group-tag
+
+
+Using nearly exclusively the tkinter.Canvas items using their tags and IDs?
+===========================================================================
+Advantages
+----------
+* No need for adding aditional classes and logic (except for some special cases.
+* Yery loose coupling.
+
+Disadvantages
+-------------
+* Very complicated and in many ways expensise way to assign elements and find the element you want when handling events. They are very nested using just their tags.
+* No direct assignment of objects, etc. Only tags are allowed.
+* No events for the items are available, so everything needs to be programmed in a non-comfortable way. With events one might move its children with it.
+* No advantags of OOP concepts like encapsulation, instantiation, etc. The code stays quite unstructured.

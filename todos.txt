@@ -65,3 +65,9 @@ UNASSIGNED
 * Continue with the implementation of the connectors in the editor. Does it make sense and is it even possible to create a class for it?
 * Think about the usage of tkinter.Canvas tags systematically. Does it make sense to implement functions that give me the reference to the associated class/object? Generally think about: how to connect the class objects and the canvas elements?
 * Later think about BlackBox and RepeatBox, loading and storing into/from the editor.
+
+
+GUI
+---
+* Build a function that returns the ids of elements that contain at least or exactly a given list of tags
+* Check connections for circles
