@@ -352,6 +352,23 @@ class Connection(Item):
         return self._connected
     # end def
 
+    def open_connection_at(self, pin: Pin) -> Optional[Pin]:
+        if pin in (self._output_pin, self._input_pin):
+            self._connected = False
+
+            if pin is self._output_pin:
+                self._output_pin = None
+                return self._input_pin
+
+            elif pin is self._input_pin:
+                self._input_pin = None
+                return self._output_pin
+            # end if
+        # end if
+
+        return None
+    # end def
+
     def update_open_conn_end(self, x: float, y: float) -> None:
         if not self._connected:
             if self._output_pin is None:
@@ -500,6 +517,16 @@ class VBlock:
         return self._frame
     # end def
 
+    @property
+    def freeze_highlighting(self) -> bool:
+        return self._freeze_highlighting
+    # end def
+
+    @freeze_highlighting.setter
+    def freeze_highlighting(self, freeze: bool) -> None:
+        self._freeze_highlighting = freeze
+    # end def
+
     def _get_all_items(self) -> List[Item]:
         items = list()
         items.append(self._frame)
@@ -564,19 +591,17 @@ class VBlock:
     # end for
 
     def _on_enter_or_leave(self, event: tk.Event) -> None:
-        if self._action_mode is not Editor.ActionMode.RESIZE:
-            if not self._freeze_highlighting:
-                if getattr(event, "type") == tk.EventType.Enter:
-                    self._do_enter()
-                elif getattr(event, "type") == tk.EventType.Leave:
-                    self._do_leave()
-                # end if
+        if not self._freeze_highlighting:
+            if getattr(event, "type") == tk.EventType.Enter:
+                self._do_enter()
+            elif getattr(event, "type") == tk.EventType.Leave:
+                self._do_leave()
             # end if
         # end if
     # end def
 
     def is_within_connector_area(self, pos_x: int, pos_y: int) -> Optional[Pin]:
-        def is_within_connector_group_area(conn_dir: ConnDir) -> Optional[Pin]:
+        def is_within_connector_area(conn_dir: ConnDir) -> Optional[Pin]:
             pins = self._input_pins if conn_dir == ConnDir.IN else self._output_pins
 
             for n, pin in enumerate(pins):
@@ -588,11 +613,11 @@ class VBlock:
             return None
         # end def
 
-        res = is_within_connector_group_area(ConnDir.IN)
+        res = is_within_connector_area(ConnDir.IN)
         if res is not None:
             return res
 
-        res = is_within_connector_group_area(ConnDir.OUT)
+        res = is_within_connector_area(ConnDir.OUT)
         if res is not None:
             return res
 
@@ -778,9 +803,9 @@ class VBlock:
 
         # Ignore the line object (which is always under the mouse cursor),
         # since we want the underlying connector rectangle
-        if len(item_ids_under_cursor) > 0 and item_ids_under_cursor[0] == self._editor.cur_conn.item_id:
-            item_ids_under_cursor = item_ids_under_cursor[1:]
-        # end if
+        while len(item_ids_under_cursor) > 0 and isinstance(self._editor.get_item_by_id(item_ids_under_cursor[0]), Connection):
+            item_ids_under_cursor.pop(0)
+        # end while
 
         frame = None
         for item_id in item_ids_under_cursor:
@@ -799,7 +824,7 @@ class VBlock:
         x, y = getattr(event, "x"), getattr(event, "y")
 
         self._resize_dir = self._is_within_resize_area(x, y)
-        self._connect_start = self.is_within_connector_area(x, y)
+        pin = self.is_within_connector_area(x, y)
         self._action_base_grid_offset = [self._editor.winfo_pointerx() % self._grid_size,
                                          self._editor.winfo_pointery() % self._grid_size]
         self._action_last_pos_mouse = list(self._editor.winfo_pointerxy())
@@ -810,25 +835,37 @@ class VBlock:
             # Bring the item under the mouse pointer to the top
             self._raise_to_top()
 
-        elif self._connect_start is not None:
-            if self._connect_start.occupied:
-                self._connect_start = None
-                return
-            # end if
+        elif pin is not None:
             self._action_mode = Editor.ActionMode.CONNECT
-            conn = Connection(self._editor, *self._connect_start.center_coords, first_conn_pin=self._connect_start)
-            self._connect_start.conn = conn
-            self._editor.cur_conn = conn
+
+            if not pin.occupied:
+                # Start a new connection
+                self._connect_start = pin
+                conn = Connection(self._editor, *self._connect_start.center_coords, first_conn_pin=self._connect_start)
+                self._connect_start.conn = conn
+                self._editor.cur_conn = conn
+            else:
+                # Open existing connection
+                conn = pin.conn
+                pin.conn = None
+                other_pin = conn.open_connection_at(pin)
+
+                if other_pin is not None:
+                    self._connect_start = other_pin
+                    self._connect_start.conn = conn
+                    self._editor.cur_conn = conn
+                # end if
+            # end if
 
         else:
             self._action_mode = Editor.ActionMode.MOVE
 
-            for block in self._editor.blocks:
-                block.freeze_highlighting = True
-
             # Bring the item under the mouse pointer to the top (and keep the connector lines always on top)
             self._raise_to_top()
         # end if
+
+        for block in self._editor.blocks:
+            block.freeze_highlighting = True
     # end def
 
     def _on_b1_motion(self, event: tk.Event) -> None:
@@ -924,11 +961,12 @@ class VBlock:
             self._connect_start = None
 
         elif self._action_mode is Editor.ActionMode.MOVE:
-            for block in self._editor.blocks:
-                if block.freeze_highlighting:
-                    block.freeze_highlighting = False
-            # end for
+            pass
         # end if
+
+        for block in self._editor.blocks:
+            block.freeze_highlighting = False
+        # end for
 
         self._action_mode = Editor.ActionMode.NONE
     # end if
