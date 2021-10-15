@@ -101,6 +101,7 @@ class Item:
 
         # Callbacks
         self._cbs_move = list()
+        self._cbs_events = list()
     # end def
 
     def __repr__(self) -> str:
@@ -177,7 +178,15 @@ class Item:
     # end def
 
     def bind(self, event=None, callback=None, add=None) -> None:
+        self._cbs_events.append((event, callback))
         self._editor.tag_bind(self._item_id, event, callback, add)
+    # end def
+
+    def do_event(self, sequence: str, event: tk.Event):
+        for s, cb in self._cbs_events:
+            if s == sequence:
+                cb(event)
+        # end for
     # end def
 
     def itemconfigure(self, cnf=None, **kw) -> None:
@@ -322,6 +331,7 @@ class Connection(Item):
     def __init__(self, editor: Editor, x: float, y: float, first_conn_pin: Pin, parent: Optional[Item] = None) -> None:
         coords = (x, y, x, y)
         item_id = editor.create_line(*coords, width=2, fill="blue")
+
         editor.tag_raise(item_id, "all")
         super().__init__(editor, item_id, coords, parent)
 
@@ -335,6 +345,12 @@ class Connection(Item):
         # end if
 
         self._connected = False
+
+        self.bind("<Enter>", lambda event: self.forward_event_to_underlying_non_connector_item("<Enter>", event, forward_only_when_connected=True))
+        self.bind("<Leave>", lambda event: self.forward_event_to_underlying_non_connector_item("<Leave>", event, forward_only_when_connected=True))
+        self.bind("<Button-1>", lambda event: self.forward_event_to_underlying_non_connector_item("<Button-1>", event))
+        self.bind("<ButtonRelease-1>", lambda event: self.forward_event_to_underlying_non_connector_item("<ButtonRelease-1>", event))
+        self.bind("<B1-Motion>", lambda event: self.forward_event_to_underlying_non_connector_item("<B1-Motion>", event, item=self._editor.connect_start, forward_only_when_connected=True))
     # end def
 
     def __repr__(self) -> str:
@@ -350,6 +366,37 @@ class Connection(Item):
     @property
     def connected(self) -> bool:
         return self._connected
+    # end def
+
+    def forward_event_to_underlying_non_connector_item(self, sequence: str, event: tk.Event, item: Optional[Item] = None, forward_only_when_connected: bool = False) -> None:
+        if item is None:
+            x, y = getattr(event, "x"), getattr(event, "y")
+            print(sequence)
+
+            # Helps to retrieve the current topmost block under the cursor.
+            # We have to do it this complicated way, since the currently drawn connector line blocks the
+            # cursor's 'view' to the current item under the cursor.
+            item_ids_under_cursor = list(reversed(self._editor.find_overlapping(x, y, x, y)))
+
+            # Ignore the connection line object (which is always under the mouse cursor),
+            # since we want the potentially underlying items
+            while len(item_ids_under_cursor) > 0 and isinstance(self._editor.get_item_by_id(item_ids_under_cursor[0]), Connection):
+                item_ids_under_cursor.pop(0)
+            # end while
+
+            if len(item_ids_under_cursor) > 0:
+                print("->")
+                item = self._editor.get_item_by_id(item_ids_under_cursor[0])
+            # end if
+        # end if
+
+        if item is not None:
+            connected = self._editor.cur_conn is not None and not self._editor.cur_conn.connected
+
+            if forward_only_when_connected and connected or not forward_only_when_connected:
+                item.do_event(sequence, event)
+            # end if
+        # end if
     # end def
 
     def open_connection_at(self, pin: Pin) -> Optional[Pin]:
@@ -442,15 +489,11 @@ class VBlock:
 
         # Common variables for multiple actions
         self._grid_size = 10
-        self._action_mode = Editor.ActionMode.NONE
         self._action_base_grid_offset = None
         self._action_last_pos_mouse = None
 
         # Resize
         self._resize_dir = None
-
-        # Connect
-        self._connect_start = None
 
         # Main Frame
         self._frame = Frame(self._editor, x, y, width, height, corner_radius, self)
@@ -504,7 +547,7 @@ class VBlock:
 
     def __repr__(self) -> str:
         x1, y1, x2, y2 = self._frame.bbox
-        return f"Item(editor={self._editor}, name={self._name}, n_inputs={self._n_inputs}, n_outputs={self._n_outputs}, x={x1}, y={y1}, width={x2-x1}, height={y2-y1}" \
+        return f"Item(editor={self._editor}, name={self._name}, n_inputs={self._n_inputs}, n_outputs={self._n_outputs}, x={x1}, y={y1}, width={x2-x1}, height={y2-y1} " \
                f"corner_radius={self._corner_radius}, connector_size={self._connector_size})"
     # end def
 
@@ -780,6 +823,8 @@ class VBlock:
 
     @staticmethod
     def get_block_from_item(item: Item) -> Optional[VBlock]:
+        # Item might also be the frame itself
+
         if item is not None:
             while item.parent is not None:
                 item = item.parent
@@ -793,33 +838,6 @@ class VBlock:
         return None
     # end def
 
-    def _get_frame_under_pos(self, x: float, y: float) -> Optional[Frame]:
-        # Child might also be the frame itself
-
-        # Retrieve the current topmost block under the cursor.
-        # We have to do it this complicated way, since the currently drawn connector line blocks the
-        # cursor's 'view' to the current item under the cursor.
-        item_ids_under_cursor = list(reversed(self._editor.find_overlapping(x, y, x, y)))
-
-        # Ignore the line object (which is always under the mouse cursor),
-        # since we want the underlying connector rectangle
-        while len(item_ids_under_cursor) > 0 and isinstance(self._editor.get_item_by_id(item_ids_under_cursor[0]), Connection):
-            item_ids_under_cursor.pop(0)
-        # end while
-
-        frame = None
-        for item_id in item_ids_under_cursor:
-            item = self._editor.get_item_by_id(item_id)
-            frame = VBlock.get_block_from_item(item).frame
-
-            if frame is not None:
-                break
-            # end if
-        # end for
-
-        return frame
-    # end def
-
     def _on_button_1(self, event: tk.Event) -> None:
         x, y = getattr(event, "x"), getattr(event, "y")
 
@@ -830,35 +848,38 @@ class VBlock:
         self._action_last_pos_mouse = list(self._editor.winfo_pointerxy())
 
         if self._resize_dir is not None:
-            self._action_mode = Editor.ActionMode.RESIZE
+            self._editor.action_mode = Editor.ActionMode.RESIZE
 
             # Bring the item under the mouse pointer to the top
             self._raise_to_top()
 
         elif pin is not None:
-            self._action_mode = Editor.ActionMode.CONNECT
+            self._editor.action_mode = Editor.ActionMode.CONNECT
 
             if not pin.occupied:
                 # Start a new connection
-                self._connect_start = pin
-                conn = Connection(self._editor, *self._connect_start.center_coords, first_conn_pin=self._connect_start)
-                self._connect_start.conn = conn
+                self._editor.connect_start = pin
+                conn = Connection(self._editor, *self._editor.connect_start.center_coords, first_conn_pin=self._editor.connect_start)
+                self._editor.connect_start.conn = conn
                 self._editor.cur_conn = conn
             else:
                 # Open existing connection
                 conn = pin.conn
                 pin.conn = None
                 other_pin = conn.open_connection_at(pin)
+                conn.update_open_conn_end(x, y)
 
                 if other_pin is not None:
-                    self._connect_start = other_pin
-                    self._connect_start.conn = conn
+                    self._editor.connect_start = other_pin
+                    self._editor.connect_start.conn = conn
                     self._editor.cur_conn = conn
                 # end if
             # end if
 
+            self._do_leave()
+
         else:
-            self._action_mode = Editor.ActionMode.MOVE
+            self._editor.action_mode = Editor.ActionMode.MOVE
 
             # Bring the item under the mouse pointer to the top (and keep the connector lines always on top)
             self._raise_to_top()
@@ -883,17 +904,17 @@ class VBlock:
         dy = pointer_y_cur - self._action_last_pos_mouse[1]
         self._action_last_pos_mouse = [pointer_x_cur, pointer_y_cur]
 
-        if self._action_mode is Editor.ActionMode.RESIZE:
+        if self._editor.action_mode is Editor.ActionMode.RESIZE:
             self._resize(self._resize_dir, dx, dy)
 
-        elif self._action_mode is Editor.ActionMode.CONNECT:
+        elif self._editor.action_mode is Editor.ActionMode.CONNECT:
             # The connector line is defined to start at the OUT pin and ends at a IN pin.
             # This is necessary to update the line's correct endpoint coordinates during the connection process
             if self._editor.cur_conn is not None:
                 self._editor.cur_conn.update_open_conn_end(x, y)
             # end if
 
-        elif self._action_mode is Editor.ActionMode.MOVE:
+        elif self._editor.action_mode is Editor.ActionMode.MOVE:
             # Move rectangle and all its children
             for item in self.items:
                 item.move(dx, dy)
@@ -916,30 +937,31 @@ class VBlock:
         # end if
     # end def
 
+    def do_button_release_1(self, event) -> None:
+        self._on_button_release_1(event)
+    # end if
+
     def _on_button_release_1(self, event) -> None:
         x, y = getattr(event, "x"), getattr(event, "y")
+        print(self._name)
 
-        if self._action_mode is Editor.ActionMode.RESIZE:
+        if self._editor.action_mode is Editor.ActionMode.RESIZE:
             self._resize_min_size_offset = [0, 0]
             self._resize_dir = None
             self._action_last_pos_mouse = None
 
-        elif self._action_mode is Editor.ActionMode.CONNECT:
-            # There is a problem with <ButtonRelease-1>: it will return the same item where the corresponding <B1-Motion> happened before,
-            # instead of the item under the cursor when releasing the mouse button. That's why we need to find the correct item manually.
+        elif self._editor.action_mode is Editor.ActionMode.CONNECT:
+            connect_start_block = VBlock.get_block_from_item(self._editor.connect_start)
 
-            # Check if the mouse was released under a (valid) connector
-            frame = self._get_frame_under_pos(x, y)
-
-            if frame is not None and VBlock.get_block_from_item(self._connect_start) != VBlock.get_block_from_item(frame):  # prevent connecting within the same block
-                connect_end = frame.parent_block.is_within_connector_area(x, y)
+            if connect_start_block is not self:  # Prevent connecting within the same block
+                connect_end = self.is_within_connector_area(x, y)
                 if connect_end is not None:
                     if connect_end.occupied:
                         connect_end = None
 
                     # Don't allow to connect IN with IN or OUT with OUT
-                    if self._connect_start and connect_end and \
-                            self._connect_start.conn_dir is not connect_end.conn_dir:
+                    if self._editor.connect_start and connect_end and \
+                            self._editor.connect_start.conn_dir is not connect_end.conn_dir:
                         # Place the end of the connector line in the center of the connector pin
                         self._editor.cur_conn.update_open_conn_end(*connect_end.center_coords)
 
@@ -958,9 +980,11 @@ class VBlock:
             self._editor.cur_conn = None
 
             # Remove reference os the connect-start-pin
-            self._connect_start = None
+            self._editor.connect_start = None
 
-        elif self._action_mode is Editor.ActionMode.MOVE:
+            connect_start_block._do_leave()
+
+        elif self._editor.action_mode is Editor.ActionMode.MOVE:
             pass
         # end if
 
@@ -968,7 +992,7 @@ class VBlock:
             block.freeze_highlighting = False
         # end for
 
-        self._action_mode = Editor.ActionMode.NONE
+        self._editor.action_mode = Editor.ActionMode.NONE
     # end if
 # end class
 
@@ -987,8 +1011,17 @@ class Editor(tk.Canvas):
         self._blocks = list()
         self._items = list()  # A list of all Items created on this editor. Necessary to handle some events.
 
+        self._action_mode = Editor.ActionMode.NONE
+
         # Connect
         self._cur_conn = None
+        self._connect_start = None
+
+        # Special handling for button release event
+        # There is a problem with <ButtonRelease-1>: it will return the same item where the corresponding <B1-Motion> happened before,
+        # instead of the item under the cursor when releasing the mouse button. That's why we need to hook the button release event.
+        self._button_release_1_event_bindings = list()
+        self.bind("<ButtonRelease-1>", self._on_button_release_1)
     # end def
 
     @property
@@ -1009,6 +1042,58 @@ class Editor(tk.Canvas):
     @cur_conn.setter
     def cur_conn(self, conn: Optional[Connection]) -> None:
         self._cur_conn = conn
+    # end def
+
+    @property
+    def action_mode(self) -> Editor.ActionMode:
+        return self._action_mode
+    # end def
+
+    @action_mode.setter
+    def action_mode(self, action_mode: Editor.ActionMode) -> None:
+        self._action_mode = action_mode
+    # end def
+
+    @property
+    def connect_start(self) -> Pin:
+        return self._connect_start
+    # end def
+
+    @connect_start.setter
+    def connect_start(self, pin: Pin) -> None:
+        self._connect_start = pin
+    # end def
+
+    def tag_bind(self, tagOrId, sequence=None, func=None, add=None):
+        if sequence == "<ButtonRelease-1>":
+            if not add:  # Delete all old ones
+                for i in reversed(range(len(self._button_release_1_event_bindings))):
+                    if self._button_release_1_event_bindings[i][0] == tagOrId:
+                        self._button_release_1_event_bindings.pop(i)
+                    # end if
+                # end for
+            # end if
+            self._button_release_1_event_bindings.append((tagOrId, func))
+
+        else:
+            super().tag_bind(tagOrId, sequence, func, add)
+        # end if
+    # end if
+
+    def _on_button_release_1(self, event) -> None:
+        x, y = getattr(event, "x"), getattr(event, "y")
+
+        item_ids_under_cursor = list(reversed(self.find_overlapping(x, y, x, y)))
+
+        if len(item_ids_under_cursor) > 0:
+            item_id = item_ids_under_cursor[0]
+
+            for tag, cb in self._button_release_1_event_bindings:
+                if tag == item_id:
+                    cb(event)
+                # end if
+            # end for
+        # end if
     # end def
 
     def add_item(self, item: Item) -> None:
