@@ -101,7 +101,6 @@ class Item:
 
         # Callbacks
         self._cbs_move = list()
-        self._cbs_events = list()
     # end def
 
     def __repr__(self) -> str:
@@ -130,6 +129,14 @@ class Item:
         x1, y1, x2, y2 = min(coords[::2]), min(coords[1::2]), max(coords[::2]), max(coords[1::2])
 
         return x1, y1, x2, y2
+    # end def
+
+    def highlight(self, highlight: bool = True) -> None:
+        if highlight:
+            self._editor.itemconfig(self.item_id, fill="red")
+        else:
+            self._editor.itemconfig(self.item_id, fill="")
+        # end if
     # end def
 
     def check_inside_item_bbox(self, pos_x: int, pos_y: int) -> bool:
@@ -178,15 +185,7 @@ class Item:
     # end def
 
     def bind(self, event=None, callback=None, add=None) -> None:
-        self._cbs_events.append((event, callback))
         self._editor.tag_bind(self._item_id, event, callback, add)
-    # end def
-
-    def do_event(self, sequence: str, event: tk.Event):
-        for s, cb in self._cbs_events:
-            if s == sequence:
-                cb(event)
-        # end for
     # end def
 
     def itemconfigure(self, cnf=None, **kw) -> None:
@@ -234,7 +233,6 @@ class Pin(Item):
         super().__init__(editor, item_id, coords, parent)
 
         self._conn_dir = conn_dir
-
         self._conn: Optional[Connection] = None
     # end def
 
@@ -346,11 +344,10 @@ class Connection(Item):
 
         self._connected = False
 
-        self.bind("<Enter>", lambda event: self.forward_event_to_underlying_non_connector_item("<Enter>", event, forward_only_when_connected=True))
-        self.bind("<Leave>", lambda event: self.forward_event_to_underlying_non_connector_item("<Leave>", event, forward_only_when_connected=True))
-        self.bind("<Button-1>", lambda event: self.forward_event_to_underlying_non_connector_item("<Button-1>", event))
-        self.bind("<ButtonRelease-1>", lambda event: self.forward_event_to_underlying_non_connector_item("<ButtonRelease-1>", event))
-        self.bind("<B1-Motion>", lambda event: self.forward_event_to_underlying_non_connector_item("<B1-Motion>", event, item=self._editor.connect_start, forward_only_when_connected=True))
+        # Ignore / forward several events
+        for sequence in ("<Enter>", "<Leave>", "<Button-1>", "<ButtonRelease-1>", "<Motion>", "<B1-Motion>", "<<ButtonReleaseRealBefore-1>>"):
+            self.bind(sequence, lambda event: True)
+        # end for
     # end def
 
     def __repr__(self) -> str:
@@ -366,37 +363,6 @@ class Connection(Item):
     @property
     def connected(self) -> bool:
         return self._connected
-    # end def
-
-    def forward_event_to_underlying_non_connector_item(self, sequence: str, event: tk.Event, item: Optional[Item] = None, forward_only_when_connected: bool = False) -> None:
-        if item is None:
-            x, y = getattr(event, "x"), getattr(event, "y")
-            print(sequence)
-
-            # Helps to retrieve the current topmost block under the cursor.
-            # We have to do it this complicated way, since the currently drawn connector line blocks the
-            # cursor's 'view' to the current item under the cursor.
-            item_ids_under_cursor = list(reversed(self._editor.find_overlapping(x, y, x, y)))
-
-            # Ignore the connection line object (which is always under the mouse cursor),
-            # since we want the potentially underlying items
-            while len(item_ids_under_cursor) > 0 and isinstance(self._editor.get_item_by_id(item_ids_under_cursor[0]), Connection):
-                item_ids_under_cursor.pop(0)
-            # end while
-
-            if len(item_ids_under_cursor) > 0:
-                print("->")
-                item = self._editor.get_item_by_id(item_ids_under_cursor[0])
-            # end if
-        # end if
-
-        if item is not None:
-            connected = self._editor.cur_conn is not None and not self._editor.cur_conn.connected
-
-            if forward_only_when_connected and connected or not forward_only_when_connected:
-                item.do_event(sequence, event)
-            # end if
-        # end if
     # end def
 
     def open_connection_at(self, pin: Pin) -> Optional[Pin]:
@@ -536,12 +502,26 @@ class VBlock:
         # Bind enter/leave events
         self.items = self._get_all_items()
 
+        self._last_highlighted_pin = None
+
         for item in self.items:
-            item.bind("<Enter>", lambda event: self._on_enter_or_leave(event))
-            item.bind("<Leave>", lambda event: self._on_enter_or_leave(event))
-            item.bind("<Button-1>", lambda event: self._on_button_1(event))
-            item.bind("<B1-Motion>", lambda event: self._on_b1_motion(event))
-            item.bind("<ButtonRelease-1>", lambda event: self._on_button_release_1(event))
+            if item is not self._frame:
+                item.bind("<Enter>", lambda event: True)
+                item.bind("<Leave>", lambda event: True)
+                item.bind("<Button-1>", lambda event: True)
+                item.bind("<Motion>", lambda event: True)
+                item.bind("<B1-Motion>", lambda event: True)
+                item.bind("<ButtonRelease-1>", lambda event: True)
+                item.bind("<<ButtonReleaseRealBefore-1>>", lambda event: True)
+            else:
+                item.bind("<Enter>", self._on_enter_or_leave)
+                item.bind("<Leave>", self._on_enter_or_leave)
+                item.bind("<Button-1>", self._on_button_1)
+                item.bind("<Motion>", self._on_motion)
+                item.bind("<B1-Motion>", self._on_b1_motion)
+                item.bind("<ButtonRelease-1>", self._on_button_release_1)
+                item.bind("<<ButtonReleaseRealBefore-1>>", self._on_button_release_real_before_1)
+            # end if
         # end for
     # end def
 
@@ -568,6 +548,23 @@ class VBlock:
     @freeze_highlighting.setter
     def freeze_highlighting(self, freeze: bool) -> None:
         self._freeze_highlighting = freeze
+    # end def
+
+    @staticmethod
+    def get_block_from_item(item: Item) -> Optional[VBlock]:
+        # Item might also be the frame itself
+
+        if item is not None:
+            while item.parent is not None:
+                item = item.parent
+            # end while
+
+            if isinstance(item, Frame):
+                return item.parent_block
+            # end if
+        # end if
+
+        return None
     # end def
 
     def _get_all_items(self) -> List[Item]:
@@ -643,7 +640,7 @@ class VBlock:
         # end if
     # end def
 
-    def is_within_connector_area(self, pos_x: int, pos_y: int) -> Optional[Pin]:
+    def _is_within_connector_area(self, pos_x: int, pos_y: int) -> Optional[Pin]:
         def is_within_connector_area(conn_dir: ConnDir) -> Optional[Pin]:
             pins = self._input_pins if conn_dir == ConnDir.IN else self._output_pins
 
@@ -821,28 +818,11 @@ class VBlock:
         recalc_pin_positions(self._output_pins, ConnDir.OUT)
     # end def
 
-    @staticmethod
-    def get_block_from_item(item: Item) -> Optional[VBlock]:
-        # Item might also be the frame itself
-
-        if item is not None:
-            while item.parent is not None:
-                item = item.parent
-            # end while
-
-            if isinstance(item, Frame):
-                return item.parent_block
-            # end if
-        # end if
-
-        return None
-    # end def
-
     def _on_button_1(self, event: tk.Event) -> None:
         x, y = getattr(event, "x"), getattr(event, "y")
 
         self._resize_dir = self._is_within_resize_area(x, y)
-        pin = self.is_within_connector_area(x, y)
+        pin = self._is_within_connector_area(x, y)
         self._action_base_grid_offset = [self._editor.winfo_pointerx() % self._grid_size,
                                          self._editor.winfo_pointery() % self._grid_size]
         self._action_last_pos_mouse = list(self._editor.winfo_pointerxy())
@@ -852,6 +832,9 @@ class VBlock:
 
             # Bring the item under the mouse pointer to the top
             self._raise_to_top()
+
+            # Prevent blocks changing their color during operation (important for when mouse leaves item and enters it again due to grid spacing)
+            self._editor.freeze_highlighting_all_blocks()
 
         elif pin is not None:
             self._editor.action_mode = Editor.ActionMode.CONNECT
@@ -876,17 +859,31 @@ class VBlock:
                 # end if
             # end if
 
-            self._do_leave()
+            # Keep the starting block highlighted
+            self.freeze_highlighting = True
 
         else:
             self._editor.action_mode = Editor.ActionMode.MOVE
 
             # Bring the item under the mouse pointer to the top (and keep the connector lines always on top)
             self._raise_to_top()
-        # end if
 
-        for block in self._editor.blocks:
-            block.freeze_highlighting = True
+            self._editor.freeze_highlighting_all_blocks()
+        # end if
+    # end def
+
+    def _on_motion(self, event: tk.Event) -> None:
+        x, y = getattr(event, "x"), getattr(event, "y")
+
+        pin = self._is_within_connector_area(x, y)
+
+        if pin is not None:
+            pin.highlight()
+            self._last_highlighted_pin = pin
+        else:
+            if self._last_highlighted_pin is not None:
+                self._last_highlighted_pin.highlight(False)
+        # end if
     # end def
 
     def _on_b1_motion(self, event: tk.Event) -> None:
@@ -937,13 +934,33 @@ class VBlock:
         # end if
     # end def
 
-    def do_button_release_1(self, event) -> None:
-        self._on_button_release_1(event)
-    # end if
-
     def _on_button_release_1(self, event) -> None:
+        item_ids_under_cursor = self._editor.get_all_item_ids_under_cursor(event)
+
+        if self._editor.action_mode is Editor.ActionMode.CONNECT:
+            # Delete the temp. connector line if if was not connected properly
+            if self._editor.cur_conn is not None and not self._editor.cur_conn.connected:
+                self._editor.cur_conn.dispose()
+            # end if
+
+            # Remove handle in editor
+            self._editor.cur_conn = None
+
+            # Remove reference of the connect-start-pin
+            self._editor.connect_start = None
+        # end if
+
+        self._editor.action_mode = Editor.ActionMode.NONE
+
+        if self._frame.item_id not in item_ids_under_cursor:
+            self._do_leave()
+        # end if
+
+        self._editor.freeze_highlighting_all_blocks(False)
+    # end def
+
+    def _on_button_release_real_before_1(self, event) -> None:
         x, y = getattr(event, "x"), getattr(event, "y")
-        print(self._name)
 
         if self._editor.action_mode is Editor.ActionMode.RESIZE:
             self._resize_min_size_offset = [0, 0]
@@ -954,7 +971,7 @@ class VBlock:
             connect_start_block = VBlock.get_block_from_item(self._editor.connect_start)
 
             if connect_start_block is not self:  # Prevent connecting within the same block
-                connect_end = self.is_within_connector_area(x, y)
+                connect_end = self._is_within_connector_area(x, y)
                 if connect_end is not None:
                     if connect_end.occupied:
                         connect_end = None
@@ -971,29 +988,10 @@ class VBlock:
                 # end if
             # end if
 
-            # Or delete the temp. connector line if if was not connected properly
-            if not self._editor.cur_conn.connected:
-                self._editor.cur_conn.dispose()
-            # end if
-
-            # Remove handle in editor
-            self._editor.cur_conn = None
-
-            # Remove reference os the connect-start-pin
-            self._editor.connect_start = None
-
-            connect_start_block._do_leave()
-
         elif self._editor.action_mode is Editor.ActionMode.MOVE:
             pass
         # end if
-
-        for block in self._editor.blocks:
-            block.freeze_highlighting = False
-        # end for
-
-        self._editor.action_mode = Editor.ActionMode.NONE
-    # end if
+    # end def
 # end class
 
 
@@ -1017,11 +1015,45 @@ class Editor(tk.Canvas):
         self._cur_conn = None
         self._connect_start = None
 
-        # Special handling for button release event
-        # There is a problem with <ButtonRelease-1>: it will return the same item where the corresponding <B1-Motion> happened before,
-        # instead of the item under the cursor when releasing the mouse button. That's why we need to hook the button release event.
-        self._button_release_1_event_bindings = list()
+        # Event handling
+        self._valid_event_sequences = list()
+        for i in range(1, 3+1):
+            # Standard events
+            self._valid_event_sequences.append(f"<Button-{i}>")
+            self._valid_event_sequences.append(f"<Double-Button-{i}>")
+            self._valid_event_sequences.append(f"<Triple-Button-{i}>")
+            self._valid_event_sequences.append(f"<ButtonRelease-{i}>")
+            self._valid_event_sequences.append(f"<B{i}-Motion>")
+            self._valid_event_sequences.append("<Enter>")
+            self._valid_event_sequences.append("<Leave>")
+
+            # Custom events
+            self._valid_event_sequences.append(f"<<ButtonReleaseRealBefore-{i}>>")
+            self._valid_event_sequences.append(f"<<ButtonReleaseRealAfter-{i}>>")
+            self._valid_event_sequences.append(f"<<B{i}-MotionReal>>")
+        # end for
+        self._valid_event_sequences.append(f"<Motion>")
+
+        # This dictionary holds all bound events. It's a dict(key=sequence of dict(key = item/tag of list(of cbs))).
+        self._cbs_events = dict()
+        for s in self._valid_event_sequences:
+            self._cbs_events[s] = dict()
+        # end for
+
+        # We implement our events our own since there's no suitable way to get the desired behavior using the standard event handling.
+        # These events are the basic mouse events we need to derive all other events.
+        self.bind("<Button-1>", self._on_button_1)
+        self.bind("<Button-2>", self._on_button_2)
+        self.bind("<Button-3>", self._on_button_3)
         self.bind("<ButtonRelease-1>", self._on_button_release_1)
+        self.bind("<ButtonRelease-2>", self._on_button_release_2)
+        self.bind("<ButtonRelease-3>", self._on_button_release_3)
+        self.bind("<Motion>", self._on_motion)
+
+        self._cur_items_button1_pressed = list()
+        self._cur_items_button2_pressed = list()
+        self._cur_items_button3_pressed = list()
+        self._cur_items_entered = list()
     # end def
 
     @property
@@ -1064,57 +1096,6 @@ class Editor(tk.Canvas):
         self._connect_start = pin
     # end def
 
-    def tag_bind(self, tagOrId, sequence=None, func=None, add=None):
-        if sequence == "<ButtonRelease-1>":
-            if not add:  # Delete all old ones
-                for i in reversed(range(len(self._button_release_1_event_bindings))):
-                    if self._button_release_1_event_bindings[i][0] == tagOrId:
-                        self._button_release_1_event_bindings.pop(i)
-                    # end if
-                # end for
-            # end if
-            self._button_release_1_event_bindings.append((tagOrId, func))
-
-        else:
-            super().tag_bind(tagOrId, sequence, func, add)
-        # end if
-    # end if
-
-    def _on_button_release_1(self, event) -> None:
-        x, y = getattr(event, "x"), getattr(event, "y")
-
-        item_ids_under_cursor = list(reversed(self.find_overlapping(x, y, x, y)))
-
-        if len(item_ids_under_cursor) > 0:
-            item_id = item_ids_under_cursor[0]
-
-            for tag, cb in self._button_release_1_event_bindings:
-                if tag == item_id:
-                    cb(event)
-                # end if
-            # end for
-        # end if
-    # end def
-
-    def add_item(self, item: Item) -> None:
-        self._items.append(item)
-    # end def
-
-    def get_item_by_id(self, item_id) -> Optional[Item]:
-        for item in self._items:
-            if item.item_id == item_id:
-                return item
-            # end if
-        # end for
-
-        return None
-    # end der
-
-    def add_block(self, name: str, n_inputs: int, n_outputs: int, x: float, y: float, width: float, height: float) -> None:
-        block = VBlock(self, name, n_inputs=n_inputs, n_outputs=n_outputs, x=x, y=y, width=width, height=height)
-        self._blocks.append(block)
-    # end def
-
     @staticmethod
     def hex2rgb(str_rgb) -> Tuple[int, int, int]:
         try:
@@ -1130,6 +1111,247 @@ class Editor(tk.Canvas):
             raise ValueError("Invalid value %r provided for rgb color." % str_rgb)
 
         return int(r, 16), int(g, 16), int(b, 16)
+    # end def
+
+    def tag_bind(self, tagOrId, sequence=None, func=None, add=None) -> bool:
+        if sequence in self._valid_event_sequences:
+            bindings = self._cbs_events[sequence]
+
+            if bindings.get(tagOrId) is None:
+                bindings[tagOrId] = list()
+
+            else:
+                if not add:  # Delete all old ones
+                    binding = bindings.get(tagOrId)
+                    if binding is not None:
+                        binding[tagOrId] = list()
+                    # end if
+                # end if
+            # end if
+            bindings[tagOrId].append(func)
+
+            return True
+
+        else:
+            super().tag_bind(tagOrId, sequence, func, add)
+        # end if
+
+        return False
+    # end if
+
+    def tag_unbind(self, tagOrId, sequence, func=None) -> None:
+        item_ids = self._cbs_events.get(sequence)
+
+        if item_ids is not None:
+            cbs = item_ids.get(tagOrId)
+
+            if cbs is not None:
+                for c in reversed(range(len(cbs))):
+                    cb = cbs[c]
+
+                    if cb == func:
+                        cbs.remove(cb)
+                    # end if
+                # end for
+
+                if len(cbs) == 0:
+                    del item_ids[tagOrId]
+                # end if
+            # end if
+        # end if
+    # end def
+
+    def add_item(self, item: Item) -> None:
+        self._items.append(item)
+    # end def
+
+    def add_block(self, name: str, n_inputs: int, n_outputs: int, x: float, y: float, width: float, height: float) -> None:
+        block = VBlock(self, name, n_inputs=n_inputs, n_outputs=n_outputs, x=x, y=y, width=width, height=height)
+        self._blocks.append(block)
+    # end def
+
+    def get_item_by_id(self, item_id) -> Optional[Item]:
+        for item in self._items:
+            if item.item_id == item_id:
+                return item
+            # end if
+        # end for
+
+        return None
+    # end def
+
+    def get_all_item_ids_under_pos(self, x: int, y: int) -> List[int]:
+        return list(reversed(self.find_overlapping(x, y, x, y)))
+    # end def
+
+    def get_all_item_ids_under_cursor(self, event: tk.Event) -> List[int]:
+        x, y = getattr(event, "x"), getattr(event, "y")
+
+        return self.get_all_item_ids_under_pos(x, y)
+    # end def
+
+    def create_rectangle_rounded(self, x1: float, y1: float, x2: float, y2: float, radius: float = 25., **kwargs) -> int:
+        points = [x1 + radius * 2, y1,
+                  x2 - radius * 2, y1,
+                  x2, y1,
+                  x2, y1 + radius * 2,
+                  x2, y2 - radius * 2,
+                  x2, y2,
+                  x2 - radius * 2, y2,
+                  x1 + radius * 2, y2,
+                  x1, y2,
+                  x1, y2 - radius * 2,
+                  x1, y1 + radius * 2,
+                  x1, y1]
+
+        return self.create_polygon(points, **kwargs, smooth=True)
+    # end def
+
+    def freeze_highlighting_all_blocks(self, freeze: bool = True) -> None:
+        for block in self._blocks:
+            block.freeze_highlighting = freeze
+    # end def
+
+    @staticmethod
+    def _call_events_and_get_propagate(cbs: List[callable], event: tk.Event, event_type: Optional[tk.EventType] = None) -> bool:
+        propagate = False  # Stores if the information if event shall be propagated to the next item
+        for cb in cbs:  # Iterate through all callbacks bound for that item to that specific sequence
+            if event_type is not None:
+                event.type = event_type
+            res = cb(event)
+            propagate = propagate or res
+        # end for
+
+        return propagate
+    # end def
+
+    def _generate_events(self, sequence: str, item_ids: List[int], event: tk.Event, check_propagate: bool, item_ids_called: Optional[List[callable]] = None) -> None:
+        bindings = self._cbs_events[sequence]
+
+        for item_id in item_ids:
+            if item_id in bindings.keys():
+                if item_ids_called is not None:
+                    item_ids_called.append(item_id)
+                # end if
+
+                prop = self._call_events_and_get_propagate(bindings[item_id], event)
+
+                if check_propagate and not prop:
+                    break
+                # end if
+
+            else:
+                break
+            # end if
+        # end for
+    # end def
+
+    def _on_button_1(self, event) -> None:
+        item_ids_under_cursor = self.get_all_item_ids_under_cursor(event)
+
+        self._generate_events(sequence="<Button-1>", item_ids=item_ids_under_cursor, event=event, check_propagate=True, item_ids_called=self._cur_items_button1_pressed)
+    # end def
+
+    def _on_button_2(self, event) -> None:
+        item_ids_under_cursor = self.get_all_item_ids_under_cursor(event)
+
+        self._generate_events(sequence="<Button-2>", item_ids=item_ids_under_cursor, event=event, check_propagate=True, item_ids_called=self._cur_items_button2_pressed)
+    # end def
+
+    def _on_button_3(self, event) -> None:
+        item_ids_under_cursor = self.get_all_item_ids_under_cursor(event)
+
+        self._generate_events(sequence="<Button-3>", item_ids=item_ids_under_cursor, event=event, check_propagate=True, item_ids_called=self._cur_items_button3_pressed)
+    # end def
+
+    def _on_button_release_1(self, event) -> None:
+        item_ids_under_cursor = self.get_all_item_ids_under_cursor(event)
+
+        self._generate_events(sequence="<<ButtonReleaseRealBefore-1>>", item_ids=item_ids_under_cursor, event=event, check_propagate=True)
+        self._generate_events(sequence="<ButtonRelease-1>", item_ids=self._cur_items_button1_pressed, event=event, check_propagate=False)
+        self._generate_events(sequence="<<ButtonReleaseRealAfter-1>>", item_ids=item_ids_under_cursor, event=event, check_propagate=True)
+
+        self._cur_items_button1_pressed.clear()
+    # end def
+
+    def _on_button_release_2(self, event) -> None:
+        item_ids_under_cursor = self.get_all_item_ids_under_cursor(event)
+
+        self._generate_events(sequence="<<ButtonReleaseRealBefore-2>>", item_ids=item_ids_under_cursor, event=event, check_propagate=True)
+        self._generate_events(sequence="<ButtonRelease-2>", item_ids=self._cur_items_button2_pressed, event=event, check_propagate=False)
+        self._generate_events(sequence="<<ButtonReleaseRealAfter-2>>", item_ids=item_ids_under_cursor, event=event, check_propagate=True)
+
+        self._cur_items_button2_pressed.clear()
+    # end def
+
+    def _on_button_release_3(self, event) -> None:
+        item_ids_under_cursor = self.get_all_item_ids_under_cursor(event)
+
+        self._generate_events(sequence="<<ButtonReleaseRealBefore-3>>", item_ids=item_ids_under_cursor, event=event, check_propagate=True)
+        self._generate_events(sequence="<ButtonRelease-3>", item_ids=self._cur_items_button3_pressed, event=event, check_propagate=False)
+        self._generate_events(sequence="<<ButtonReleaseRealAfter-3>>", item_ids=item_ids_under_cursor, event=event, check_propagate=True)
+
+        self._cur_items_button3_pressed.clear()
+    # end def
+
+    def _on_motion(self, event) -> None:
+        item_ids_under_cursor = self.get_all_item_ids_under_cursor(event)
+
+        sequence = "<Leave>"
+        bindings = self._cbs_events[sequence]
+        mark_for_deletion = list()
+        prop_cont = True  # Indicates if the propagation continues. If not, all remaining items will leave (i.e. trigger the <Leave" event).
+        for i in range(len(self._cur_items_entered)):  # From top to bottom
+            item_id, prop = self._cur_items_entered[i]
+            if item_id not in item_ids_under_cursor or not prop_cont:
+                if item_id in bindings.keys():
+                    self._call_events_and_get_propagate(bindings[item_id], event, event_type=tk.EventType.Leave)
+                # end if
+                mark_for_deletion.append(i)
+            # end if
+            if not prop:
+                prop_cont = False
+            # end if
+        # end for
+
+        for i in reversed(mark_for_deletion):
+            del self._cur_items_entered[i]
+        # end for
+
+        sequence = "<Enter>"
+        bindings = self._cbs_events[sequence]
+
+        for item_id in item_ids_under_cursor:
+            if item_id in [item_id for item_id, _ in self._cur_items_entered]:
+                prop = None
+                for entered_item_id in self._cur_items_entered:
+                    if entered_item_id[0] == item_id:
+                        prop = entered_item_id[1]
+                        break
+                    # end if
+                # end for
+
+                if not prop:  # If not propagating
+                    break
+            else:
+
+                if item_id in bindings.keys():
+                    prop = self._call_events_and_get_propagate(bindings[item_id], event, event_type=tk.EventType.Enter)
+                    self._cur_items_entered.insert(0, (item_id, prop))  # Keep item order from top to bottom (necessary for the <Leave> event).
+                    if not prop:
+                        break
+                    # end if
+
+                else:
+                    break
+                # end if
+
+            # end if
+        # end for
+
+        self._generate_events(sequence="<Motion>", item_ids=item_ids_under_cursor, event=event, check_propagate=True)
+        self._generate_events(sequence="<B1-Motion>", item_ids=self._cur_items_button1_pressed, event=event, check_propagate=False)
+        self._generate_events(sequence="<<B1-MotionReal>>", item_ids=item_ids_under_cursor, event=event, check_propagate=True)
     # end def
 
     def _on_configure(self, event) -> None:
@@ -1185,23 +1407,6 @@ class Editor(tk.Canvas):
 
         x = self.create_image(0, 0, anchor=tk.NW, image=self._gradient_photo_image)
         self.lower(x)
-    # end def
-
-    def create_rectangle_rounded(self, x1: float, y1: float, x2: float, y2: float, radius: float = 25., **kwargs) -> int:
-        points = [x1 + radius * 2, y1,
-                  x2 - radius * 2, y1,
-                  x2, y1,
-                  x2, y1 + radius * 2,
-                  x2, y2 - radius * 2,
-                  x2, y2,
-                  x2 - radius * 2, y2,
-                  x1 + radius * 2, y2,
-                  x1, y2,
-                  x1, y2 - radius * 2,
-                  x1, y1 + radius * 2,
-                  x1, y1]
-
-        return self.create_polygon(points, **kwargs, smooth=True)
     # end def
 # end class
 
